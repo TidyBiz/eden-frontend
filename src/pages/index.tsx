@@ -1,8 +1,11 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Geist } from 'next/font/google'
 import decode from '@/utils/decode'
 import axios from 'axios'
 import Navbar from '@/components/navbar'
+import AdminInterface from '@/components/admin'
+import CashierInterface from '@/components/cashier'
+import { useEdenMarketBackend } from '@/contexts/backend'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -25,10 +28,28 @@ export default function Home() {
   const [scannedCode, setScannedCode] = useState('')
   const [total, setTotal] = useState(0)
   const [isProcessing, setIsProcessing] = useState(false)
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [userRole, setUserRole] = useState<'cashier' | 'admin' | null>(null)
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const [showLoginModal, setShowLoginModal] = useState(false)
+  const [loginError, setLoginError] = useState('')
+  const [isLoginLoading, setIsLoginLoading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  const { user, isAuthenticated, login, logout } = useEdenMarketBackend()
+
+  // Función centralizada para manejar el foco del input del scanner
+  const focusScanner = useCallback(() => {
+    // No aplicar foco si el modal de login está abierto
+    if (showLoginModal) return
+
+    if (inputRef.current && !inputRef.current.disabled) {
+      setTimeout(() => {
+        // Verificar nuevamente el estado del modal antes de aplicar foco
+        if (inputRef.current && !showLoginModal) {
+          inputRef.current.focus()
+        }
+      }, 10)
+    }
+  }, [showLoginModal])
 
   // Calcular total cuando el carrito cambie
   useEffect(() => {
@@ -41,49 +62,39 @@ export default function Home() {
 
   // Mantener el focus en el input para capturar códigos del escáner
   useEffect(() => {
-    const focusInput = () => {
-      if (inputRef.current && !inputRef.current.disabled) {
-        // Usar setTimeout para asegurar que se ejecute después de otros eventos
-        setTimeout(() => {
-          if (inputRef.current) {
-            inputRef.current.focus()
-          }
-        }, 10)
-      }
-    }
-
     // Focus inicial
-    focusInput()
+    focusScanner()
 
     // Re-focus en múltiples eventos
     const events = ['click', 'blur', 'focusout', 'mousedown', 'keydown']
 
     events.forEach((event) => {
-      document.addEventListener(event, focusInput, true)
+      document.addEventListener(event, focusScanner, true)
     })
 
     // También escuchar cuando la ventana recupera el foco
-    window.addEventListener('focus', focusInput)
+    window.addEventListener('focus', focusScanner)
 
     // Verificar cada cierto tiempo si el input tiene foco
     const intervalId = setInterval(() => {
       if (
         document.activeElement !== inputRef.current &&
         inputRef.current &&
-        !inputRef.current.disabled
+        !inputRef.current.disabled &&
+        !showLoginModal
       ) {
-        focusInput()
+        focusScanner()
       }
     }, 100)
 
     return () => {
       events.forEach((event) => {
-        document.removeEventListener(event, focusInput, true)
+        document.removeEventListener(event, focusScanner, true)
       })
-      window.removeEventListener('focus', focusInput)
+      window.removeEventListener('focus', focusScanner)
       clearInterval(intervalId)
     }
-  }, [])
+  }, [focusScanner, showLoginModal])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -113,9 +124,7 @@ export default function Home() {
 
       // Re-enfocar inmediatamente después de procesar
       setTimeout(() => {
-        if (inputRef.current) {
-          inputRef.current.focus()
-        }
+        focusScanner()
       }, 50)
     }
   }
@@ -158,9 +167,7 @@ export default function Home() {
 
       // Re-enfocar después de procesar
       setTimeout(() => {
-        if (inputRef.current) {
-          inputRef.current.focus()
-        }
+        focusScanner()
       }, 50)
     } else {
       console.log('No se pudo decodificar el código:', scannedCode.trim())
@@ -172,9 +179,7 @@ export default function Home() {
 
     // Re-enfocar después de eliminar
     setTimeout(() => {
-      if (inputRef.current) {
-        inputRef.current.focus()
-      }
+      focusScanner()
     }, 50)
   }
 
@@ -192,9 +197,7 @@ export default function Home() {
 
     // Re-enfocar después de actualizar cantidad
     setTimeout(() => {
-      if (inputRef.current) {
-        inputRef.current.focus()
-      }
+      focusScanner()
     }, 50)
   }
 
@@ -203,9 +206,7 @@ export default function Home() {
       alert('El carrito está vacío')
       // Re-enfocar después del alert
       setTimeout(() => {
-        if (inputRef.current) {
-          inputRef.current.focus()
-        }
+        focusScanner()
       }, 100)
       return
     }
@@ -231,9 +232,7 @@ export default function Home() {
 
     // Re-enfocar después de cualquier acción
     setTimeout(() => {
-      if (inputRef.current) {
-        inputRef.current.focus()
-      }
+      focusScanner()
     }, 100)
   }
 
@@ -249,21 +248,36 @@ export default function Home() {
 
     // Re-enfocar después de cualquier acción
     setTimeout(() => {
-      if (inputRef.current) {
-        inputRef.current.focus()
-      }
+      focusScanner()
     }, 100)
   }
 
-  const handleLogin = () => {
-    setIsLoggedIn(true)
-    setUserRole('cashier')
-    setShowUserMenu(false)
+  const handleLogin = async (username: string, password: string) => {
+    setIsLoginLoading(true)
+    setLoginError('')
+
+    try {
+      const response = await login({
+        username,
+        password,
+      })
+
+      if (response) {
+        setShowLoginModal(false)
+        setShowUserMenu(false)
+      } else {
+        setLoginError('Credenciales inválidas. Por favor, inténtalo de nuevo.')
+      }
+    } catch (err) {
+      console.error('Login error:', err)
+      setLoginError('Error al iniciar sesión. Por favor, inténtalo de nuevo.')
+    } finally {
+      setIsLoginLoading(false)
+    }
   }
 
   const handleLogout = () => {
-    setIsLoggedIn(false)
-    setUserRole(null)
+    logout()
     setShowUserMenu(false)
     setCart([])
   }
@@ -272,19 +286,30 @@ export default function Home() {
     setShowUserMenu(!showUserMenu)
   }
 
+  const openLoginModal = () => {
+    setShowLoginModal(true)
+    setShowUserMenu(false)
+    setLoginError('')
+  }
+
+  const closeLoginModal = () => {
+    setShowLoginModal(false)
+    setLoginError('')
+  }
+
   const WelcomeScreen = () => (
     <div className="text-center py-20">
       <div className="max-w-2xl mx-auto">
         <div className="text-8xl mb-8">🏪</div>
-        <h1 className="text-4xl font-bold text-gray-800 mb-6">
+        <h1 className="text-4xl font-bold text-gray-100 mb-6">
           Bienvenido al Sistema de Gestión de Eden Market
         </h1>
-        <p className="text-xl text-gray-600 mb-8">
+        <p className="text-xl text-gray-300 mb-8">
           Para continuar y acceder a las funcionalidades del sistema, por favor
           inicie sesión con sus credenciales.
         </p>
         <button
-          onClick={handleLogin}
+          onClick={openLoginModal}
           className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xl font-semibold transition-colors shadow-lg hover:shadow-xl"
         >
           Iniciar Sesión
@@ -293,178 +318,143 @@ export default function Home() {
     </div>
   )
 
-  const AdminInterface = () => (
-    <div className="text-center py-20">
-      <div className="max-w-2xl mx-auto">
-        <div className="text-6xl mb-8">👨‍💼</div>
-        <h1 className="text-3xl font-bold text-gray-800 mb-6">
-          Panel de Administración
-        </h1>
-        <p className="text-lg text-gray-600">
-          Interfaz de administrador en desarrollo...
-        </p>
-      </div>
-    </div>
-  )
+  // Modal de Login - Versión funcional con login real
+  const LoginModal = () => {
+    const [username, setUsername] = useState('')
+    const [password, setPassword] = useState('')
 
-  // Componente para la interfaz de cajero (el contenido actual)
-  const CashierInterface = () => (
-    <div>
-      {/* Scanner Input */}
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <label
-          htmlFor="scanner"
-          className="block text-lg font-semibold text-gray-700 mb-3"
-        >
-          Escanear Código de Producto
-        </label>
-        <div className="flex gap-3">
-          <input
-            ref={inputRef}
-            id="scanner"
-            type="text"
-            value={scannedCode}
-            onChange={(e) => setScannedCode(e.target.value)}
-            onKeyDown={handleScannerInput}
-            placeholder="Escanee un código o escriba manualmente..."
-            className="flex-1 px-4 py-3 border-2 border-blue-300 rounded-lg focus:ring-4 focus:ring-blue-200 focus:border-blue-500 focus:outline-none text-lg bg-blue-50 focus:bg-white transition-all"
-            disabled={isProcessing}
-            autoComplete="off"
-          />
-          <button
-            onClick={() => addProductToCart(scannedCode.trim())}
-            disabled={!scannedCode.trim() || isProcessing}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium"
-          >
-            {isProcessing ? 'Procesando...' : 'Agregar'}
-          </button>
-        </div>
-        <p className="text-sm text-gray-500 mt-2">
-          💡 Códigos de ejemplo: 1234567890, 2000100003909, 3456789012,
-          4567890123
-        </p>
-        <p className="text-xs text-blue-600 mt-1">
-          🎯 El campo está siempre activo para escanear códigos automáticamente
-        </p>
-      </div>
+    const handleSubmit = async () => {
+      if (username.trim() && password.trim()) {
+        await handleLogin(username.trim(), password.trim())
+        // Solo limpiar los campos si el login fue exitoso (el modal se cerrará automáticamente)
+        if (!loginError) {
+          setUsername('')
+          setPassword('')
+        }
+      }
+    }
 
-      {/* Shopping Cart */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">
-            Carrito de Compras
-          </h2>
-          {cart.length > 0 && (
+    const handleKeyPress = (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        handleSubmit()
+      }
+    }
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-gray-800 rounded-lg p-8 max-w-md w-full mx-4">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-100">Iniciar Sesión</h2>
             <button
-              onClick={clearCart}
-              className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg border border-red-200 hover:border-red-300 transition-colors"
+              onClick={closeLoginModal}
+              className="text-gray-400 hover:text-gray-200"
+              disabled={isLoginLoading}
             >
-              Vaciar Carrito
-            </button>
-          )}
-        </div>
-
-        {cart.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">
-            <div className="text-6xl mb-4">🛒</div>
-            <p className="text-lg">El carrito está vacío</p>
-            <p className="text-sm">Escanee un producto para comenzar</p>
-          </div>
-        ) : (
-          <>
-            <div className="space-y-4 mb-6">
-              {cart.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-                >
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-800">{item.name}</h3>
-                    <p className="text-gray-600">
-                      Precio x kilo: ${item.price.toFixed(2)}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() =>
-                          updateQuantity(item.id, item.quantity - 1)
-                        }
-                        className="w-8 h-8 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded text-gray-700 font-bold"
-                      >
-                        -
-                      </button>
-                      <span className="w-12 text-center font-semibold">
-                        {item.quantity}
-                      </span>
-                      <button
-                        onClick={() =>
-                          updateQuantity(item.id, item.quantity + 1)
-                        }
-                        className="w-8 h-8 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded text-gray-700 font-bold"
-                      >
-                        +
-                      </button>
-                    </div>
-
-                    <div className="text-lg font-bold text-gray-800 w-20 text-right">
-                      ${(item.price * item.weight * item.quantity).toFixed(2)}
-                    </div>
-
-                    <button
-                      onClick={() => removeProductFromCart(item.id)}
-                      className="ml-3 px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-sm"
-                    >
-                      Eliminar
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Total and Actions */}
-            <div className="border-t pt-6">
-              <div className="flex justify-between items-center mb-6">
-                <span className="text-2xl font-bold text-gray-800">Total:</span>
-                <span className="text-3xl font-bold text-green-600">
-                  ${total.toFixed(2)}
-                </span>
-              </div>
-
-              <button
-                onClick={confirmPurchase}
-                className="w-full py-4 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xl font-semibold transition-colors"
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                Confirmar Compra
-              </button>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+
+          {loginError && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+              {loginError}
             </div>
-          </>
-        )}
+          )}
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Usuario
+              </label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                onKeyDown={handleKeyPress}
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-100"
+                placeholder="Escribe tu usuario..."
+                disabled={isLoginLoading}
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Contraseña
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={handleKeyPress}
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-100"
+                placeholder="Escribe tu contraseña..."
+                disabled={isLoginLoading}
+                required
+              />
+            </div>
+
+            <button
+              onClick={handleSubmit}
+              disabled={isLoginLoading || !username.trim() || !password.trim()}
+              className="w-full py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-500 text-white rounded-lg font-medium transition-colors"
+            >
+              {isLoginLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
-  )
+    )
+  }
 
   return (
-    <div className={`${geistSans.className} min-h-screen bg-gray-50 p-4`}>
+    <div className={`${geistSans.className} min-h-screen bg-gray-900 p-4`}>
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <Navbar
-          isLoggedIn={isLoggedIn}
-          handleLogin={handleLogin}
+          isLoggedIn={isAuthenticated}
+          user={user}
+          handleLogin={openLoginModal}
           handleLogout={handleLogout}
           toggleUserMenu={toggleUserMenu}
           showUserMenu={showUserMenu}
         />
 
         {/* Contenido condicional basado en el estado del usuario */}
-        {!isLoggedIn ? (
+        {!isAuthenticated ? (
           <WelcomeScreen />
-        ) : userRole === 'admin' ? (
+        ) : user?.role === 'admin' ? (
           <AdminInterface />
         ) : (
-          <CashierInterface />
+          <CashierInterface
+            inputRef={inputRef}
+            scannedCode={scannedCode}
+            setScannedCode={setScannedCode}
+            handleScannerInput={handleScannerInput}
+            addProductToCart={addProductToCart}
+            isProcessing={isProcessing}
+            cart={cart}
+            clearCart={clearCart}
+            updateQuantity={updateQuantity}
+            removeProductFromCart={removeProductFromCart}
+            total={total}
+            confirmPurchase={confirmPurchase}
+          />
         )}
+
+        {/* Modal de Login */}
+        {showLoginModal && <LoginModal />}
       </div>
     </div>
   )

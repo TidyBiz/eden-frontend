@@ -1,13 +1,16 @@
 import React from 'react'
+import { User } from '@/utils/constants/common'
 
 export default function Navbar({
   isLoggedIn,
+  user,
   handleLogin,
   handleLogout,
   toggleUserMenu,
   showUserMenu,
 }: {
   isLoggedIn: boolean
+  user: User | null
   handleLogin: () => void
   handleLogout: () => void
   toggleUserMenu: () => void
@@ -24,10 +27,10 @@ export default function Navbar({
           <div className="flex items-center gap-3">
             <div className="text-right">
               <p className="text-sm text-gray-300">
-                {isLoggedIn ? 'Usuario' : 'Invitado'}
+                {isLoggedIn ? user?.username || 'Usuario' : 'Invitado'}
               </p>
               <p className="text-xs text-gray-400">
-                {isLoggedIn ? 'Admin' : 'No autenticado'}
+                {isLoggedIn ? user?.role || 'user' : 'No autenticado'}
               </p>
             </div>
             <button
