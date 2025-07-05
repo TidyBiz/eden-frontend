@@ -10,13 +10,32 @@ import axios from 'axios'
 import { EDEN_MARKET_BACKEND_URL } from '@/utils/constants/api'
 import { User, CreateUserDto, UpdateUserDto } from '@/utils/constants/common'
 
+/*************************************************
+ *                  Types                       *
+ *************************************************/
+
+export type LoginDto = {
+  username: string
+  password: string
+}
+
+export type LoginResponse = {
+  access_token: string
+  user: User
+}
+
 export type EdenMarketBackendValue = {
   user: User | null
+  jwt: string | null
+  isAuthenticated: boolean
+  login: (body: LoginDto) => Promise<LoginResponse | null>
+  logout: () => void
   fetchUser: () => Promise<User>
   createUser: (body: CreateUserDto) => Promise<User>
   updateUser: (body: UpdateUserDto) => Promise<User>
 }
 
+//////////////////////////////////////////////////////////////////////////
 const EdenMarketBackendContext = createContext<EdenMarketBackendValue>(
   {} as EdenMarketBackendValue
 )
@@ -30,15 +49,46 @@ export function EdenMarketBackendProvider({
   children: ReactNode
 }) {
   /*************************************************
-   *                  States                      *
+   *                  States                       *
    *************************************************/
   const [user, setUser] = useState<User | null>(null)
-
-  const jwt = ''
+  const [jwt, setJwt] = useState<string | null>(null)
 
   /*************************************************
    *                  Functions                    *
    *************************************************/
+
+  /**
+   * Logs in a user with username and password
+   * @param body - Login credentials
+   */
+  const login = async (body: LoginDto): Promise<LoginResponse | null> => {
+    try {
+      const res = await axios.post(
+        `${EDEN_MARKET_BACKEND_URL}/auth/login`,
+        body
+      )
+
+      const loginResponse: LoginResponse = res.data
+
+      // Store JWT and user data
+      setJwt(loginResponse.access_token)
+      setUser(loginResponse.user)
+
+      return loginResponse
+    } catch (error) {
+      console.log('Error logging in:', error)
+      return null
+    }
+  }
+
+  /**
+   * Logs out the current user
+   */
+  const logout = () => {
+    setJwt(null)
+    setUser(null)
+  }
 
   /**
    * Creates a new user in the backend
@@ -106,6 +156,10 @@ export function EdenMarketBackendProvider({
 
   const value: EdenMarketBackendValue = {
     user,
+    jwt,
+    isAuthenticated: !!jwt && !!user,
+    login,
+    logout,
     fetchUser,
     createUser,
     updateUser,
