@@ -11,10 +11,11 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
     'overview' | 'stock' | 'stores' | 'employees'
   >('overview')
 
-  const { products, fetchProducts } = useEdenMarketBackend()
+  const { products, fetchProducts, branches, fetchBranches } = useEdenMarketBackend()
 
   useEffect(() => {
-    fetchProducts()
+    fetchProducts();
+    fetchBranches();
   }, [])
 
   const formatCurrency = (amount: number) => {
@@ -157,10 +158,10 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
             <thead>
               <tr className="border-b border-gray-700">
                 <th className="text-left py-3 px-4 text-gray-300">Producto</th>
-                {/* <th className="text-right py-3 px-4 text-gray-300">
-                  Stock Total
-                </th> */}
                 <th className="text-right py-3 px-4 text-gray-300">Precio</th>
+                <th className="text-right py-3 px-4 text-gray-300">
+                  Stock Total
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -172,12 +173,11 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
                   <td className="py-3 px-4 text-gray-100 font-medium">
                     {product.name}
                   </td>
-                  {/* 
-                  <td className="py-3 px-4 text-right text-gray-100">
-                    {product.totalStock}
-                  </td> */}
                   <td className="py-3 px-4 text-right text-gray-100">
                     {formatCurrency(product.price)}
+                  </td>
+                  <td className="py-3 px-4 text-right text-gray-100">
+                    {product.stock[0]?.quantity}
                   </td>
                   <td className="py-3 px-4 text-center">
                     {/* <span
@@ -280,14 +280,14 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
           Gestión de Sucursales
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {mockData.stores.map((store) => (
+          {branches.map((store) => (
             <div
               key={store.id}
               className="bg-gray-700/50 rounded-lg p-4 border border-gray-600"
             >
               <div className="flex items-center justify-between mb-3">
                 <h4 className="font-medium text-gray-100">{store.name}</h4>
-                <span
+                {/* <span
                   className={`px-2 py-1 rounded-full text-xs ${
                     store.status === 'active'
                       ? 'bg-green-900/50 text-green-300 border border-green-700'
@@ -295,10 +295,10 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
                   }`}
                 >
                   {store.status === 'active' ? 'Activa' : 'Mantenimiento'}
-                </span>
+                </span> */}
               </div>
               <div className="space-y-2">
-                <div className="flex justify-between">
+                {/* <div className="flex justify-between">
                   <span className="text-gray-400">Facturación:</span>
                   <span className="text-green-400 font-medium">
                     {formatCurrency(store.revenue)}
@@ -315,7 +315,7 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
                   <span className="text-purple-400 font-medium">
                     {store.employees}
                   </span>
-                </div>
+                </div> */}
               </div>
             </div>
           ))}

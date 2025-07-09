@@ -25,4 +25,18 @@ export type Product = {
   isSoldByWeight: boolean;
   description: string;
   isActive: boolean;
+  stock: Stock[];
+}
+
+export type Branch = {
+  id: string
+  name: string
+  stock: Stock[]
+}
+
+export type Stock = {
+  id: string
+  quantity: number
+  product: Product
+  branch: Branch
 }
