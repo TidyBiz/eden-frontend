@@ -9,7 +9,7 @@ import { safeLocalStorage } from '@/utils/storage'
 
 // ** Types
 import { EDEN_MARKET_BACKEND_URL } from '@/utils/constants/api'
-import { User, CreateUserDto, UpdateUserDto, Product } from '@/utils/constants/common'
+import { User, CreateUserDto, UpdateUserDto, Product, Branch } from '@/utils/constants/common'
 
 /*************************************************
  *                  Types                       *
@@ -28,6 +28,7 @@ export type LoginResponse = {
 export type EdenMarketBackendValue = {
   user: User | null
   products: Product[]
+  branches: Branch[]
   jwt: string | null
   isAuthenticated: boolean
   isInitialized: boolean
@@ -35,6 +36,7 @@ export type EdenMarketBackendValue = {
   logout: () => void
   fetchUser: () => Promise<User>
   fetchProducts: () => Promise<Product[]>
+  fetchBranches: () => Promise<Branch[]>
   createUser: (body: CreateUserDto) => Promise<User>
   updateUser: (body: UpdateUserDto) => Promise<User>
 }
@@ -59,6 +61,7 @@ export function EdenMarketBackendProvider({
   const [jwt, setJwt] = useState<string | null>(null)
   const [isInitialized, setIsInitialized] = useState(false)
   const [products, setProducts] = useState<Product[]>([])
+  const [branches, setBranches] = useState<Branch[]>([])
 
   /*************************************************
    *                  Effects                      *
@@ -176,7 +179,7 @@ export function EdenMarketBackendProvider({
 
 
   /**
-   * Fetches products user data
+   * Fetches products data
    */
   const fetchProducts = async () => {
     if (!jwt || !user?.id) return {} as Product[]
@@ -198,6 +201,25 @@ export function EdenMarketBackendProvider({
   }
 
   /**
+   * Fetches branches data
+   */
+  const fetchBranches = async () => {
+    if (!jwt || !user?.id) return {} as Branch[]
+    try {
+      const res = await axios.get(`${EDEN_MARKET_BACKEND_URL}/branch`, {
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+        },
+      })
+      setBranches(res.data)
+      return res.data
+    } catch (error) {
+      console.log('Error fetching branches data:', error)
+      return {} as Branch[]
+    }
+  }
+
+  /**
    * Generates a livepeer JWT based on the body.
    * @param body - Data to check and generate JWT if valid.
    * @returns {Promise<object | undefined>} The generated JWT or undefined.
@@ -206,6 +228,7 @@ export function EdenMarketBackendProvider({
   const value: EdenMarketBackendValue = {
     user,
     products,
+    branches,
     jwt,
     isAuthenticated: !!jwt && !!user,
     isInitialized,
@@ -213,6 +236,7 @@ export function EdenMarketBackendProvider({
     logout,
     fetchUser,
     fetchProducts,
+    fetchBranches,
     createUser,
     updateUser,
   }
