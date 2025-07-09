@@ -1,14 +1,15 @@
 // ** React Imports
-import { ReactNode, createContext, useContext, useState } from 'react'
+import { ReactNode, createContext, useContext, useEffect, useState } from 'react'
 
 // ** Hooks
 import axios from 'axios'
 
 // ** Utils
+import { safeLocalStorage } from '@/utils/storage'
 
 // ** Types
 import { EDEN_MARKET_BACKEND_URL } from '@/utils/constants/api'
-import { User, CreateUserDto, UpdateUserDto } from '@/utils/constants/common'
+import { User, CreateUserDto, UpdateUserDto, Product } from '@/utils/constants/common'
 
 /*************************************************
  *                  Types                       *
@@ -26,11 +27,14 @@ export type LoginResponse = {
 
 export type EdenMarketBackendValue = {
   user: User | null
+  products: Product[]
   jwt: string | null
   isAuthenticated: boolean
+  isInitialized: boolean
   login: (body: LoginDto) => Promise<LoginResponse | null>
   logout: () => void
   fetchUser: () => Promise<User>
+  fetchProducts: () => Promise<Product[]>
   createUser: (body: CreateUserDto) => Promise<User>
   updateUser: (body: UpdateUserDto) => Promise<User>
 }
@@ -53,6 +57,22 @@ export function EdenMarketBackendProvider({
    *************************************************/
   const [user, setUser] = useState<User | null>(null)
   const [jwt, setJwt] = useState<string | null>(null)
+  const [isInitialized, setIsInitialized] = useState(false)
+  const [products, setProducts] = useState<Product[]>([])
+
+  /*************************************************
+   *                  Effects                      *
+   *************************************************/
+  
+  // Initialize auth state from localStorage only on client
+  useEffect(() => {
+    const authData = safeLocalStorage.getJSON<{ user: User; jwt: string }>('auth')
+    if (authData) {
+      setUser(authData.user)
+      setJwt(authData.jwt)
+    }
+    setIsInitialized(true)
+  }, [])
 
   /*************************************************
    *                  Functions                    *
@@ -75,6 +95,11 @@ export function EdenMarketBackendProvider({
       setJwt(loginResponse.access_token)
       setUser(loginResponse.user)
 
+      safeLocalStorage.setJSON('auth', {
+        user: loginResponse.user,
+        jwt: loginResponse.access_token
+      })
+
       return loginResponse
     } catch (error) {
       console.log('Error logging in:', error)
@@ -88,6 +113,7 @@ export function EdenMarketBackendProvider({
   const logout = () => {
     setJwt(null)
     setUser(null)
+    safeLocalStorage.removeItem('auth')
   }
 
   /**
@@ -148,6 +174,29 @@ export function EdenMarketBackendProvider({
     }
   }
 
+
+  /**
+   * Fetches products user data
+   */
+  const fetchProducts = async () => {
+    if (!jwt || !user?.id) return {} as Product[]
+    try {
+      const res = await axios.get(
+        `${EDEN_MARKET_BACKEND_URL}/product`,
+        {
+          headers: {
+            Authorization: `Bearer ${jwt}`,
+          },
+        }
+      )
+      setProducts(res.data)
+      return res.data
+    } catch (error) {
+      console.log('Error fetching products data:', error)
+      return {} as Product[]
+    }
+  }
+
   /**
    * Generates a livepeer JWT based on the body.
    * @param body - Data to check and generate JWT if valid.
@@ -156,11 +205,14 @@ export function EdenMarketBackendProvider({
 
   const value: EdenMarketBackendValue = {
     user,
+    products,
     jwt,
     isAuthenticated: !!jwt && !!user,
+    isInitialized,
     login,
     logout,
     fetchUser,
+    fetchProducts,
     createUser,
     updateUser,
   }

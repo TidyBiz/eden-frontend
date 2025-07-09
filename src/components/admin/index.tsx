@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { mockData } from './mockData'
+import { useEdenMarketBackend } from '@/contexts/backend'
 
 interface AdminInterfaceProps {
   className?: string
@@ -9,6 +10,12 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
   const [activeTab, setActiveTab] = useState<
     'overview' | 'stock' | 'stores' | 'employees'
   >('overview')
+
+  const { products, fetchProducts } = useEdenMarketBackend()
+
+  useEffect(() => {
+    fetchProducts()
+  }, [])
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-AR', {
@@ -150,16 +157,14 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
             <thead>
               <tr className="border-b border-gray-700">
                 <th className="text-left py-3 px-4 text-gray-300">Producto</th>
-                <th className="text-left py-3 px-4 text-gray-300">Categoría</th>
-                <th className="text-right py-3 px-4 text-gray-300">
+                {/* <th className="text-right py-3 px-4 text-gray-300">
                   Stock Total
-                </th>
+                </th> */}
                 <th className="text-right py-3 px-4 text-gray-300">Precio</th>
-                <th className="text-center py-3 px-4 text-gray-300">Estado</th>
               </tr>
             </thead>
             <tbody>
-              {mockData.products.map((product) => (
+              {products.map((product) => (
                 <tr
                   key={product.id}
                   className="border-b border-gray-700/50 hover:bg-gray-700/30"
@@ -167,17 +172,15 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
                   <td className="py-3 px-4 text-gray-100 font-medium">
                     {product.name}
                   </td>
-                  <td className="py-3 px-4 text-gray-300">
-                    {product.category}
-                  </td>
+                  {/* 
                   <td className="py-3 px-4 text-right text-gray-100">
                     {product.totalStock}
-                  </td>
+                  </td> */}
                   <td className="py-3 px-4 text-right text-gray-100">
                     {formatCurrency(product.price)}
                   </td>
                   <td className="py-3 px-4 text-center">
-                    <span
+                    {/* <span
                       className={`px-2 py-1 rounded-full text-xs ${
                         product.lowStock
                           ? 'bg-red-900/50 text-red-300 border border-red-700'
@@ -185,7 +188,7 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
                       }`}
                     >
                       {product.lowStock ? 'Stock Bajo' : 'Normal'}
-                    </span>
+                    </span> */}
                   </td>
                 </tr>
               ))}

@@ -15,3 +15,14 @@ export type User = {
   username: string
   role: EdenUserRoles
 }
+
+export type Product = {
+  id: string;
+  PLU: number;
+  name: string;
+  price: number;
+  altPrice: number;
+  isSoldByWeight: boolean;
+  description: string;
+  isActive: boolean;
+}
