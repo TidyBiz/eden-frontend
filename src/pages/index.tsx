@@ -34,7 +34,7 @@ export default function Home() {
   const [isLoginLoading, setIsLoginLoading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const { user, isAuthenticated, login, logout } = useEdenMarketBackend()
+  const { user, isAuthenticated, isInitialized, login, logout } = useEdenMarketBackend()
 
   // Función centralizada para manejar el foco del input del scanner
   const focusScanner = useCallback(() => {
@@ -295,6 +295,19 @@ export default function Home() {
   const closeLoginModal = () => {
     setShowLoginModal(false)
     setLoginError('')
+  }
+
+  if (!isInitialized) {
+    return (
+      <div className={`${geistSans.className} min-h-screen bg-gray-900 p-4`}>
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center py-20">
+            <div className="text-4xl mb-4">⏳</div>
+            <p className="text-gray-300">Cargando...</p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   const WelcomeScreen = () => (
