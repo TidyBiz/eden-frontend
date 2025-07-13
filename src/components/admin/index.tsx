@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { mockData } from './mockData'
 import { useEdenMarketBackend } from '@/contexts/backend'
+import AddProducts from '../modals/addProducts'
 
 interface AdminInterfaceProps {
   className?: string
@@ -10,6 +11,7 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
   const [activeTab, setActiveTab] = useState<
     'overview' | 'stock' | 'stores' | 'employees'
   >('overview')
+  const [isAddProductsOpen, setIsAddProductsOpen] = useState(false)
 
   const { products, fetchProducts, branches, fetchBranches } = useEdenMarketBackend()
 
@@ -150,9 +152,12 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
     <div className="space-y-6">
       {/* Stock total por producto */}
       <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-        <h3 className="text-xl font-bold text-gray-100 mb-4">
-          Stock Total por Producto
-        </h3>
+        <div className='flex justify-between items-center mb-4'>
+          <h3 className="text-xl font-bold text-gray-100">
+            Stock Total por Producto
+          </h3>
+          <AddProducts isOpen={isAddProductsOpen} setIsOpen={setIsAddProductsOpen} branches={branches} />
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
