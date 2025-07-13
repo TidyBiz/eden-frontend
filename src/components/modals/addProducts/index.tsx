@@ -12,7 +12,6 @@ function AddProducts({ isOpen, setIsOpen, branches }: AddProductsProps) {
     const modalRef = useRef<HTMLDivElement>(null);
     const overlayRef = useRef<HTMLDivElement>(null);
     const [formData, setFormData] = useState({
-        id: '1231232',
         PLU: 0,
         name: '',
         price: 0,
@@ -104,6 +103,11 @@ function AddProducts({ isOpen, setIsOpen, branches }: AddProductsProps) {
         setFormData({ ...formData, [name]: value });
     }
 
+    const handleChangeNumber = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: Number(value) || 0 });
+    }
+
     const handleChangeSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
@@ -179,7 +183,7 @@ function AddProducts({ isOpen, setIsOpen, branches }: AddProductsProps) {
                                                 className='w-full p-2 rounded-md border border-gray-300 dark:border-gray-700'
                                                 name='PLU'
                                                 value={formData.PLU}
-                                                onChange={(e) => handleChange(e)}
+                                                onChange={(e) => handleChangeNumber(e)}
                                             />
                                         </div>
                                     </div>
@@ -192,7 +196,7 @@ function AddProducts({ isOpen, setIsOpen, branches }: AddProductsProps) {
                                                 className='w-full p-2 rounded-md border border-gray-300 dark:border-gray-700'
                                                 name='price'
                                                 value={formData.price}
-                                                onChange={(e) => handleChange(e)}
+                                                onChange={(e) => handleChangeNumber(e)}
                                             />
                                         </div>
                                         <div className='flex flex-col gap-2 w-1/3'>
@@ -203,7 +207,7 @@ function AddProducts({ isOpen, setIsOpen, branches }: AddProductsProps) {
                                                 className='w-full p-2 rounded-md border border-gray-300 dark:border-gray-700'
                                                 name='altPrice'
                                                 value={formData.altPrice}
-                                                onChange={(e) => handleChange(e)}
+                                                onChange={(e) => handleChangeNumber(e)}
                                             />
                                         </div>
                                         <div className='flex flex-col gap-2 w-1/3'>
@@ -236,7 +240,7 @@ function AddProducts({ isOpen, setIsOpen, branches }: AddProductsProps) {
                                                 className='w-full p-2 rounded-md border border-gray-300 dark:border-gray-700'
                                                 name='stockNumber'
                                                 value={formData.stockNumber}
-                                                onChange={(e) => handleChange(e)}
+                                                onChange={(e) => handleChangeNumber(e)}
                                             />
                                         </div>
                                         <div className='flex flex-col gap-2 w-1/2'>

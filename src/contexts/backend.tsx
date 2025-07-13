@@ -43,7 +43,6 @@ export type EdenMarketBackendValue = {
 }
 
 export type CreateProductDto = {
-  id: string;
   PLU: number;
   name: string;
   price: number;
@@ -220,13 +219,13 @@ export function EdenMarketBackendProvider({
    */
   const createProduct = async (body: CreateProductDto) => {
     try {
+      console.log(typeof body.PLU);
       const res = await axios.post(`${EDEN_MARKET_BACKEND_URL}/product`, body, {
         headers: {
           Authorization: `Bearer ${jwt}`,
         }
       }
       )
-      console.log(res);
       return res.data
     } catch (error) {
       console.log('Error creating product:', error)
