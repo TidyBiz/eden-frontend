@@ -38,7 +38,20 @@ export type EdenMarketBackendValue = {
   fetchProducts: () => Promise<Product[]>
   fetchBranches: () => Promise<Branch[]>
   createUser: (body: CreateUserDto) => Promise<User>
+  createProduct: (body: CreateProductDto) => Promise<Product>
   updateUser: (body: UpdateUserDto) => Promise<User>
+}
+
+export type CreateProductDto = {
+  PLU: number;
+  name: string;
+  price: number;
+  altPrice: number;
+  isSoldByWeight: boolean;
+  description: string;
+  branchId: string;
+  stockNumber: number;
+  isActive?: boolean;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -66,7 +79,7 @@ export function EdenMarketBackendProvider({
   /*************************************************
    *                  Effects                      *
    *************************************************/
-  
+
   // Initialize auth state from localStorage only on client
   useEffect(() => {
     const authData = safeLocalStorage.getJSON<{ user: User; jwt: string }>('auth')
@@ -201,6 +214,26 @@ export function EdenMarketBackendProvider({
   }
 
   /**
+   * Creates a new product in the backend
+   * @param body - Product data to create
+   */
+  const createProduct = async (body: CreateProductDto) => {
+    try {
+      console.log(typeof body.PLU);
+      const res = await axios.post(`${EDEN_MARKET_BACKEND_URL}/product`, body, {
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+        }
+      }
+      )
+      return res.data
+    } catch (error) {
+      console.log('Error creating product:', error)
+      return {} as Product
+    }
+  }
+
+  /**
    * Fetches branches data
    */
   const fetchBranches = async () => {
@@ -238,6 +271,7 @@ export function EdenMarketBackendProvider({
     fetchProducts,
     fetchBranches,
     createUser,
+    createProduct,
     updateUser,
   }
 
