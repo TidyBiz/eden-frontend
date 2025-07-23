@@ -1,5 +1,7 @@
+// ** React
 import React, { useState } from 'react'
 
+////////////////////////////////////////////////////////////
 export default function ProductSearch() {
   const [searchInput, setSearchInput] = useState('')
 

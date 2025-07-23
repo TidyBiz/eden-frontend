@@ -1,11 +1,19 @@
+// ** React & Next
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Geist } from 'next/font/google'
-import decode from '@/utils/decode'
-import axios from 'axios'
+
+// ** Contexts
+import { useEdenMarketBackend } from '@/contexts/backend'
+
+// ** Components
 import Navbar from '@/components/navbar'
 import AdminInterface from '@/components/admin'
+import LoginModal from '@/components/modals/login'
 import CashierInterface from '@/components/cashier'
-import { useEdenMarketBackend } from '@/contexts/backend'
+
+// ** Utils
+import axios from 'axios'
+import decode from '@/utils/decode'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -21,8 +29,7 @@ interface Product {
   quantity: number
 }
 
-// Simulando una base de datos de productos
-
+////////////////////////////////////////////////////////////
 export default function Home() {
   const [cart, setCart] = useState<Product[]>([])
   const [scannedCode, setScannedCode] = useState('')
@@ -34,7 +41,12 @@ export default function Home() {
   const [isLoginLoading, setIsLoginLoading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const { user, isAuthenticated, isInitialized, login, logout } = useEdenMarketBackend()
+  const { user, isAuthenticated, isInitialized, login, logout } =
+    useEdenMarketBackend()
+
+  /*************************************************
+   *                  Scanner                      *
+   *************************************************/
 
   // Función centralizada para manejar el foco del input del scanner
   const focusScanner = useCallback(() => {
@@ -252,6 +264,10 @@ export default function Home() {
     }, 100)
   }
 
+  /*************************************************
+   *                  Login                        *
+   *************************************************/
+
   const handleLogin = async (username: string, password: string) => {
     setIsLoginLoading(true)
     setLoginError('')
@@ -282,10 +298,6 @@ export default function Home() {
     setCart([])
   }
 
-  const toggleUserMenu = () => {
-    setShowUserMenu(!showUserMenu)
-  }
-
   const openLoginModal = () => {
     setShowLoginModal(true)
     setShowUserMenu(false)
@@ -295,6 +307,10 @@ export default function Home() {
   const closeLoginModal = () => {
     setShowLoginModal(false)
     setLoginError('')
+  }
+
+  const toggleUserMenu = () => {
+    setShowUserMenu(!showUserMenu)
   }
 
   if (!isInitialized) {
@@ -330,106 +346,6 @@ export default function Home() {
       </div>
     </div>
   )
-
-  // Modal de Login - Versión funcional con login real
-  const LoginModal = () => {
-    const [username, setUsername] = useState('')
-    const [password, setPassword] = useState('')
-
-    const handleSubmit = async () => {
-      if (username.trim() && password.trim()) {
-        await handleLogin(username.trim(), password.trim())
-        // Solo limpiar los campos si el login fue exitoso (el modal se cerrará automáticamente)
-        if (!loginError) {
-          setUsername('')
-          setPassword('')
-        }
-      }
-    }
-
-    const handleKeyPress = (e: React.KeyboardEvent) => {
-      if (e.key === 'Enter') {
-        handleSubmit()
-      }
-    }
-
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-gray-800 rounded-lg p-8 max-w-md w-full mx-4">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-100">Iniciar Sesión</h2>
-            <button
-              onClick={closeLoginModal}
-              className="text-gray-400 hover:text-gray-200"
-              disabled={isLoginLoading}
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
-
-          {loginError && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-              {loginError}
-            </div>
-          )}
-
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Usuario
-              </label>
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                onKeyDown={handleKeyPress}
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-100"
-                placeholder="Escribe tu usuario..."
-                disabled={isLoginLoading}
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Contraseña
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                onKeyDown={handleKeyPress}
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-100"
-                placeholder="Escribe tu contraseña..."
-                disabled={isLoginLoading}
-                required
-              />
-            </div>
-
-            <button
-              onClick={handleSubmit}
-              disabled={isLoginLoading || !username.trim() || !password.trim()}
-              className="w-full py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-500 text-white rounded-lg font-medium transition-colors"
-            >
-              {isLoginLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div className={`${geistSans.className} min-h-screen bg-gray-900 p-4`}>
@@ -467,7 +383,14 @@ export default function Home() {
         )}
 
         {/* Modal de Login */}
-        {showLoginModal && <LoginModal />}
+        {showLoginModal && (
+          <LoginModal
+            handleLogin={handleLogin}
+            closeLoginModal={closeLoginModal}
+            loginError={loginError}
+            isLoginLoading={isLoginLoading}
+          />
+        )}
       </div>
     </div>
   )

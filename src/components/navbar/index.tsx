@@ -1,6 +1,10 @@
+// ** React
 import React from 'react'
+
+// ** Types
 import { User } from '@/utils/constants/common'
 
+////////////////////////////////////////////////////////////
 export default function Navbar({
   isLoggedIn,
   user,
