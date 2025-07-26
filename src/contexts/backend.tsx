@@ -89,6 +89,7 @@ export type EdenMarketBackendValue = {
   logout: () => void
   fetchUser: () => Promise<User | null>
   fetchProducts: () => Promise<Product[]>
+  fetchProductByBarcode: (PLU: number) => Promise<Product | null>
   fetchBranches: () => Promise<Branch[]>
   createUser: (body: CreateUserDto) => Promise<User | undefined>
   createProduct: (body: CreateProductDto) => Promise<Product | null>
@@ -248,6 +249,25 @@ export function EdenMarketBackendProvider({
     if (!jwt || !user?.id) return []
     try {
       const res = await axios.get(`${EDEN_MARKET_BACKEND_URL}/product`, {
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+        },
+      })
+      setProducts(res.data)
+      return res.data
+    } catch (error) {
+      console.log('Error fetching products data:', error)
+      return []
+    }
+  }
+
+  /**
+   * Fetches products data
+   */
+  const fetchProductByBarcode = async (PLU: number) => {
+    if (!jwt || !user?.id) return []
+    try {
+      const res = await axios.get(`${EDEN_MARKET_BACKEND_URL}/product/${PLU}`, { 
         headers: {
           Authorization: `Bearer ${jwt}`,
         },
@@ -505,6 +525,7 @@ export function EdenMarketBackendProvider({
     logout,
     fetchUser,
     fetchProducts,
+    fetchProductByBarcode,
     fetchBranches,
     createUser,
     createProduct,

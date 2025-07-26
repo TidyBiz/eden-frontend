@@ -11,27 +11,23 @@ import AdminInterface from '@/components/admin'
 import LoginModal from '@/components/modals/login'
 import CashierInterface from '@/components/cashier'
 
-// ** Utils
-import axios from 'axios'
+// ** Utils & Types
 import decode from '@/utils/decode'
+import type { Product } from '@/utils/constants/common'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
   subsets: ['latin'],
 })
 
-interface Product {
-  id: string
-  PLU: number
-  weight: number
-  name: string
-  price: number
-  quantity: number
+interface CartProduct extends Product {
+  quantity: number;
+  weight: number;
 }
 
 ////////////////////////////////////////////////////////////
 export default function Home() {
-  const [cart, setCart] = useState<Product[]>([])
+  const [cart, setCart] = useState<CartProduct[]>([])
   const [scannedCode, setScannedCode] = useState('')
   const [total, setTotal] = useState(0)
   const [isProcessing, setIsProcessing] = useState(false)
@@ -41,8 +37,14 @@ export default function Home() {
   const [isLoginLoading, setIsLoginLoading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const { user, isAuthenticated, isInitialized, login, logout } =
-    useEdenMarketBackend()
+  const {
+    user,
+    isAuthenticated,
+    isInitialized,
+    login,
+    logout,
+    fetchProductByBarcode,
+  } = useEdenMarketBackend()
 
   /*************************************************
    *                  Scanner                      *
@@ -150,14 +152,10 @@ export default function Home() {
 
     if (decodedData) {
       const { PLU, weight } = decodedData
-      const { data: product } = await axios.get(
-        `http://localhost:3001/product/${PLU}`
-      )
+      const product = await fetchProductByBarcode(PLU)
       // Aquí puedes usar los datos decodificados según tus necesidades
       if (product) {
         setCart((prevCart) => {
-          console.log(prevCart)
-          console.log(`Peso del producto: ${weight.toFixed(3)} kg`)
           const existingItem = prevCart.find((item) => item.PLU === PLU)
 
           if (existingItem) {
@@ -167,7 +165,7 @@ export default function Home() {
           } else {
             return [
               ...prevCart,
-              { ...product, quantity: 1, weight: weight.toFixed(3) },
+              { ...product, quantity: 1, weight: weight },
             ]
           }
         })
@@ -239,7 +237,7 @@ export default function Home() {
     if (confirmation) {
       // Aquí podrías enviar la información a tu backend
       alert('¡Compra confirmada! Gracias por su compra.')
-      setCart([])
+      // setCart([])
     }
 
     // Re-enfocar después de cualquier acción

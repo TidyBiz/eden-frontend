@@ -1,6 +1,6 @@
 interface BarcodeData {
   PLU: number
-  weight: number // Como número para poder usar toFixed()
+  weight: number
   weightRaw: string
   original: string
 }

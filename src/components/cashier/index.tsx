@@ -105,9 +105,11 @@ const CashierInterface: React.FC<CashierInterfaceProps> = ({
                 className="flex items-center justify-between p-4 bg-gray-700 rounded-lg"
               >
                 <div className="flex-1">
-                  <h3 className="font-semibold text-gray-100">{item.name}</h3>
+                  <h3 className="font-semibold text-gray-100">
+                    {item.name} - ${item.price}/kg
+                  </h3>
                   <p className="text-gray-300">
-                    Precio x kilo: ${item.price.toFixed(2)}
+                    {item.weight} kg
                   </p>
                 </div>
 
