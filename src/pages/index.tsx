@@ -21,8 +21,8 @@ const geistSans = Geist({
 })
 
 interface CartProduct extends Product {
-  quantity: number;
-  weight: number;
+  quantity: number
+  weight: number
 }
 
 ////////////////////////////////////////////////////////////
@@ -69,7 +69,8 @@ export default function Home() {
   // Calcular total cuando el carrito cambie
   useEffect(() => {
     const newTotal = cart.reduce(
-      (sum, item) => sum + item.price * item.quantity,
+      (sum, item) =>
+        sum + item.price * (item.isSoldByWeight ? item.weight : item.quantity),
       0
     )
     setTotal(newTotal)
@@ -146,28 +147,42 @@ export default function Home() {
 
   const addProductToCart = async (code: string) => {
     setIsProcessing(true)
-
-    // Simular un pequeño delay como si consultáramos una API
-    // const product = productDatabase[code]
     const decodedData = decode(scannedCode.trim())
 
     if (decodedData) {
       const { PLU, weight } = decodedData
       const product = await fetchProductByBarcode(PLU)
-      // Aquí puedes usar los datos decodificados según tus necesidades
+
       if (product) {
         setCart((prevCart) => {
           const existingItem = prevCart.find((item) => item.PLU === PLU)
 
           if (existingItem) {
+            const itemWeight =
+              Math.round((existingItem.weight + weight) * 1000) / 1000
+
+            if (itemWeight > 99) {
+              alert(
+                `⚠️ Error: El peso total del item "${product.name}" sería ${itemWeight}kg.\nEl límite máximo por item es 99kg (límite de balanza).\n\nPeso actual: ${existingItem.weight}kg\nPeso a agregar: ${weight}kg`
+              )
+              setIsProcessing(false)
+              setTimeout(() => {
+                focusScanner()
+              }, 50)
+              return prevCart
+            }
+
             return prevCart.map((item) =>
-              item.PLU === PLU ? { ...item, quantity: item.quantity + 1, weight: item.weight + weight } : item
+              item.PLU === PLU
+                ? {
+                    ...item,
+                    quantity: item.quantity + 1,
+                    weight: Math.round((item.weight + weight) * 1000) / 1000,
+                  }
+                : item
             )
           } else {
-            return [
-              ...prevCart,
-              { ...product, quantity: 1, weight: weight },
-            ]
+            return [...prevCart, { ...product, quantity: 1, weight: weight }]
           }
         })
       } else {
@@ -223,12 +238,11 @@ export default function Home() {
     }
 
     const confirmation = window.confirm(
-      `¿Confirmar compra por $${total.toFixed(2)}?\n\nProductos:\n${cart
+      `¿Confirmar compra por $${total}?\n\nProductos:\n${cart
         .map(
           (item) =>
             `• ${item.name} x${item.quantity} - $${(
-              item.price *
-              (item.isSoldByWeight ? item.weight : item.quantity)
+              item.price * (item.isSoldByWeight ? item.weight : item.quantity)
             ).toFixed(2)}`
         )
         .join('\n')}`
