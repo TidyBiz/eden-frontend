@@ -21,6 +21,8 @@ import {
   UpdateUserDto,
   Product,
   Branch,
+  CreateTransactionDto,
+  Transaction,
 } from '@/utils/constants/common'
 
 /*************************************************
@@ -89,10 +91,13 @@ export type EdenMarketBackendValue = {
   logout: () => void
   fetchUser: () => Promise<User | null>
   fetchProducts: () => Promise<Product[]>
+  fetchProductByBarcode: (PLU: number) => Promise<Product | null>
   fetchBranches: () => Promise<Branch[]>
   createUser: (body: CreateUserDto) => Promise<User | undefined>
   createProduct: (body: CreateProductDto) => Promise<Product | null>
   updateUser: (body: UpdateUserDto) => Promise<User | null>
+  fetchTransactions: () => Promise<Transaction[]>
+  createTransaction: (body: CreateTransactionDto) => Promise<Transaction | null>
   fetchRevenuePerBranch: () => Promise<RevenuePerBranch[]>
   fetchActiveBranchesCount: () => Promise<number>
   fetchTotalRevenue: () => Promise<number>
@@ -248,6 +253,25 @@ export function EdenMarketBackendProvider({
     if (!jwt || !user?.id) return []
     try {
       const res = await axios.get(`${EDEN_MARKET_BACKEND_URL}/product`, {
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+        },
+      })
+      setProducts(res.data)
+      return res.data
+    } catch (error) {
+      console.log('Error fetching products data:', error)
+      return []
+    }
+  }
+
+  /**
+   * Fetches products data
+   */
+  const fetchProductByBarcode = async (PLU: number) => {
+    if (!jwt || !user?.id) return []
+    try {
+      const res = await axios.get(`${EDEN_MARKET_BACKEND_URL}/product/${PLU}`, { 
         headers: {
           Authorization: `Bearer ${jwt}`,
         },
@@ -489,6 +513,40 @@ export function EdenMarketBackendProvider({
   }
 
   /**
+   * Creates a new transaction in the backend
+   * @param body - Transaction data to create
+   */
+
+  const createTransaction = async (body: CreateTransactionDto) => {
+    try {
+      const res = await axios.post(`${EDEN_MARKET_BACKEND_URL}/transaction`, body, {
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+        },
+      })
+      return res.data
+    } catch (error) {
+      console.log('Error creating transaction:', error)
+      return null
+    }
+  }
+
+  const fetchTransactions = async () => {
+    if (!jwt || !user?.id) return []
+    try {
+      const res = await axios.get(`${EDEN_MARKET_BACKEND_URL}/transaction`, {
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+        },
+      })
+      return res.data
+    } catch (error) {
+      console.log('Error fetching transactions:', error)
+      return []
+    }
+  }
+
+  /**
    * Generates a livepeer JWT based on the body.
    * @param body - Data to check and generate JWT if valid.
    * @returns {Promise<object | undefined>} The generated JWT or undefined.
@@ -505,10 +563,13 @@ export function EdenMarketBackendProvider({
     logout,
     fetchUser,
     fetchProducts,
+    fetchProductByBarcode,
     fetchBranches,
     createUser,
     createProduct,
     updateUser,
+    fetchTransactions,
+    createTransaction,
     // ** Analytics methods
     fetchRevenuePerBranch,
     fetchActiveBranchesCount,
