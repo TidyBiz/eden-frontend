@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react'
-import { mockData } from './mockData'
 import {
   useEdenMarketBackend,
   type BranchAnalytics,
@@ -12,16 +11,15 @@ interface AdminInterfaceProps {
 }
 
 const AdminInterface: React.FC<AdminInterfaceProps> = () => {
-  const [activeTab, setActiveTab] = useState<
-    'overview' | 'stock' | 'stores' | 'employees'
-  >('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'stock' | 'stores'>(
+    'overview'
+  )
   const [isAddProductsOpen, setIsAddProductsOpen] = useState(false)
 
   const [branchAnalytics, setBranchAnalytics] = useState<BranchAnalytics>({
     revenuePerBranch: [],
     activeBranchesCount: 0,
     totalRevenue: 0,
-    totalTransactions: 0,
   })
   const [stockAnalytics, setStockAnalytics] = useState<StockAnalytics>({
     lowStockAlerts: [],
@@ -33,9 +31,13 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
     products,
     fetchProducts,
     branches,
+    transactions,
+    totalRevenue,
     fetchBranches,
     fetchBranchAnalytics,
     fetchStockAnalytics,
+    fetchTotalRevenue,
+    fetchTransactions,
   } = useEdenMarketBackend()
 
   useEffect(() => {
@@ -46,6 +48,8 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
           fetchProducts(),
           fetchBranches(),
           loadAnalyticsData(),
+          fetchTransactions(),
+          fetchTotalRevenue(),
         ])
       } catch (error) {
         console.error('Error loading initial data:', error)
@@ -130,21 +134,21 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <KPICard
           title="Facturación Total"
-          value={formatCurrency(Number(branchAnalytics.totalRevenue) || 0)}
+          value={formatCurrency(Number(totalRevenue) || 0)}
           subtitle="Desde el inicio"
           color="green"
           isLoading={isLoadingAnalytics}
         />
         <KPICard
           title="Transacciones Totales"
-          value={Number(branchAnalytics.totalTransactions) || 0}
+          value={Number(transactions?.length) || 0}
           subtitle="Registros de stock"
           color="blue"
           isLoading={isLoadingAnalytics}
         />
         <KPICard
           title="Sucursales Activas"
-          value={Number(branchAnalytics.activeBranchesCount) || 0}
+          value={Number(branches?.length) || 0}
           subtitle="En funcionamiento"
           color="purple"
           isLoading={isLoadingAnalytics}
@@ -184,10 +188,10 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
           branchAnalytics.revenuePerBranch.length > 0 ? (
           <div className="space-y-4">
             {branchAnalytics.revenuePerBranch.map((branch) => {
-              const totalRevenue = Number(branchAnalytics.totalRevenue) || 0
+              const globalRevenue = Number(totalRevenue) || 0
               const branchRevenue = Number(branch.totalRevenue) || 0
               const percentage =
-                totalRevenue > 0 ? (branchRevenue / totalRevenue) * 100 : 0
+                globalRevenue > 0 ? (branchRevenue / globalRevenue) * 100 : 0
               return (
                 <div
                   key={branch.branchId}
@@ -305,10 +309,9 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
             <tbody>
               {products.length > 0 ? (
                 products.map((product) => {
-                  const totalStock = product.stock.reduce(
-                    (sum, stock) => sum + stock.quantity,
-                    0
-                  )
+                  const totalStock = product.stock
+                    .reduce((sum, stock) => sum + stock.quantity, 0)
+                    .toFixed(2)
                   const isLowStock = stockAnalytics.lowStockAlerts.some(
                     (alert) => alert.product.id === product.id
                   )
@@ -468,59 +471,6 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
     </div>
   )
 
-  const EmployeesTab = () => (
-    <div className="space-y-6">
-      <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-        <h3 className="text-xl font-bold text-gray-100 mb-4">
-          Gestión de Empleados
-        </h3>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-700">
-                <th className="text-left py-3 px-4 text-gray-300">Empleado</th>
-                <th className="text-left py-3 px-4 text-gray-300">Sucursal</th>
-                <th className="text-left py-3 px-4 text-gray-300">Posición</th>
-                <th className="text-right py-3 px-4 text-gray-300">Ventas</th>
-                <th className="text-center py-3 px-4 text-gray-300">Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {mockData.employees.map((employee) => (
-                <tr
-                  key={employee.id}
-                  className="border-b border-gray-700/50 hover:bg-gray-700/30"
-                >
-                  <td className="py-3 px-4 text-gray-100 font-medium">
-                    {employee.name}
-                  </td>
-                  <td className="py-3 px-4 text-gray-300">{employee.store}</td>
-                  <td className="py-3 px-4 text-gray-300">
-                    {employee.position}
-                  </td>
-                  <td className="py-3 px-4 text-right text-green-400">
-                    {formatCurrency(employee.sales)}
-                  </td>
-                  <td className="py-3 px-4 text-center">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs ${
-                        employee.status === 'active'
-                          ? 'bg-green-900/50 text-green-300 border border-green-700'
-                          : 'bg-yellow-900/50 text-yellow-300 border border-yellow-700'
-                      }`}
-                    >
-                      {employee.status === 'active' ? 'Activo' : 'Licencia'}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  )
-
   return (
     <div className="min-h-screen bg-gray-900 p-6">
       <div className="max-w-7xl mx-auto">
@@ -540,14 +490,11 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
             { id: 'overview', label: '📊 Resumen', icon: '📊' },
             { id: 'stock', label: '📦 Stock', icon: '📦' },
             { id: 'stores', label: '🏪 Sucursales', icon: '🏪' },
-            { id: 'employees', label: '👥 Empleados', icon: '👥' },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() =>
-                setActiveTab(
-                  tab.id as 'overview' | 'stock' | 'stores' | 'employees'
-                )
+                setActiveTab(tab.id as 'overview' | 'stock' | 'stores')
               }
               className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
                 activeTab === tab.id
@@ -565,7 +512,6 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
           {activeTab === 'overview' && <OverviewTab />}
           {activeTab === 'stock' && <StockTab />}
           {activeTab === 'stores' && <StoresTab />}
-          {activeTab === 'employees' && <EmployeesTab />}
         </div>
       </div>
     </div>

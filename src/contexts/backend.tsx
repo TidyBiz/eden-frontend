@@ -72,7 +72,6 @@ export type BranchAnalytics = {
   revenuePerBranch: RevenuePerBranch[]
   activeBranchesCount: number
   totalRevenue: number
-  totalTransactions: number
 }
 
 export type StockAnalytics = {
@@ -84,6 +83,8 @@ export type EdenMarketBackendValue = {
   user: User | null
   products: Product[]
   branches: Branch[]
+  transactions: Transaction[]
+  totalRevenue: number
   jwt: string | null
   isAuthenticated: boolean
   isInitialized: boolean
@@ -100,8 +101,8 @@ export type EdenMarketBackendValue = {
   createTransaction: (body: CreateTransactionDto) => Promise<Transaction | null>
   fetchRevenuePerBranch: () => Promise<RevenuePerBranch[]>
   fetchActiveBranchesCount: () => Promise<number>
+  fetchTotalRevenueByBranch: () => Promise<number>
   fetchTotalRevenue: () => Promise<number>
-  fetchTotalTransactions: () => Promise<number>
   fetchLowStockAlerts: (threshold?: number) => Promise<LowStockAlert[]>
   fetchLowStockCount: (threshold?: number) => Promise<number>
   fetchBranchAnalytics: () => Promise<BranchAnalytics>
@@ -129,6 +130,8 @@ export function EdenMarketBackendProvider({
   const [isInitialized, setIsInitialized] = useState(false)
   const [products, setProducts] = useState<Product[]>([])
   const [branches, setBranches] = useState<Branch[]>([])
+  const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [totalRevenue, setTotalRevenue] = useState<number>(0)
 
   /*************************************************
    *                  Effects                      *
@@ -271,7 +274,7 @@ export function EdenMarketBackendProvider({
   const fetchProductByBarcode = async (PLU: number) => {
     if (!jwt || !user?.id) return []
     try {
-      const res = await axios.get(`${EDEN_MARKET_BACKEND_URL}/product/${PLU}`, { 
+      const res = await axios.get(`${EDEN_MARKET_BACKEND_URL}/product/${PLU}`, {
         headers: {
           Authorization: `Bearer ${jwt}`,
         },
@@ -365,9 +368,9 @@ export function EdenMarketBackendProvider({
   }
 
   /**
-   * Fetches total revenue
+   * Fetches total revenue by branch
    */
-  const fetchTotalRevenue = async (): Promise<number> => {
+  const fetchTotalRevenueByBranch = async (): Promise<number> => {
     if (!jwt || !user?.id) return 0
     try {
       const res = await axios.get(
@@ -381,27 +384,6 @@ export function EdenMarketBackendProvider({
       return res.data
     } catch (error) {
       console.log('Error fetching total revenue:', error)
-      return 0
-    }
-  }
-
-  /**
-   * Fetches total transactions
-   */
-  const fetchTotalTransactions = async (): Promise<number> => {
-    if (!jwt || !user?.id) return 0
-    try {
-      const res = await axios.get(
-        `${EDEN_MARKET_BACKEND_URL}/branch/analytics/total-transactions`,
-        {
-          headers: {
-            Authorization: `Bearer ${jwt}`,
-          },
-        }
-      )
-      return res.data
-    } catch (error) {
-      console.log('Error fetching total transactions:', error)
       return 0
     }
   }
@@ -457,23 +439,17 @@ export function EdenMarketBackendProvider({
    */
   const fetchBranchAnalytics = async (): Promise<BranchAnalytics> => {
     try {
-      const [
-        revenuePerBranch,
-        activeBranchesCount,
-        totalRevenue,
-        totalTransactions,
-      ] = await Promise.all([
-        fetchRevenuePerBranch(),
-        fetchActiveBranchesCount(),
-        fetchTotalRevenue(),
-        fetchTotalTransactions(),
-      ])
+      const [revenuePerBranch, activeBranchesCount, totalRevenue] =
+        await Promise.all([
+          fetchRevenuePerBranch(),
+          fetchActiveBranchesCount(),
+          fetchTotalRevenueByBranch(),
+        ])
 
       return {
         revenuePerBranch,
         activeBranchesCount,
         totalRevenue,
-        totalTransactions,
       }
     } catch (error) {
       console.log('Error fetching branch analytics:', error)
@@ -481,7 +457,6 @@ export function EdenMarketBackendProvider({
         revenuePerBranch: [],
         activeBranchesCount: 0,
         totalRevenue: 0,
-        totalTransactions: 0,
       }
     }
   }
@@ -519,11 +494,15 @@ export function EdenMarketBackendProvider({
 
   const createTransaction = async (body: CreateTransactionDto) => {
     try {
-      const res = await axios.post(`${EDEN_MARKET_BACKEND_URL}/transaction`, body, {
-        headers: {
-          Authorization: `Bearer ${jwt}`,
-        },
-      })
+      const res = await axios.post(
+        `${EDEN_MARKET_BACKEND_URL}/transaction`,
+        body,
+        {
+          headers: {
+            Authorization: `Bearer ${jwt}`,
+          },
+        }
+      )
       return res.data
     } catch (error) {
       console.log('Error creating transaction:', error)
@@ -531,6 +510,10 @@ export function EdenMarketBackendProvider({
     }
   }
 
+  /**
+   * Fetches transactions data
+   * @returns {Promise<Transaction[]>} Transactions data
+   */
   const fetchTransactions = async () => {
     if (!jwt || !user?.id) return []
     try {
@@ -539,10 +522,34 @@ export function EdenMarketBackendProvider({
           Authorization: `Bearer ${jwt}`,
         },
       })
+      setTransactions(res.data)
       return res.data
     } catch (error) {
       console.log('Error fetching transactions:', error)
       return []
+    }
+  }
+
+  /**
+   * Fetches total revenue
+   * @returns {Promise<number>} Total revenue
+   */
+  const fetchTotalRevenue = async (): Promise<number> => {
+    if (!jwt || !user?.id) return 0
+    try {
+      const res = await axios.get(
+        `${EDEN_MARKET_BACKEND_URL}/transaction/analytics/total-revenue`,
+        {
+          headers: {
+            Authorization: `Bearer ${jwt}`,
+          },
+        }
+      )
+      setTotalRevenue(res.data)
+      return res.data
+    } catch (error) {
+      console.log('Error fetching total revenue:', error)
+      return 0
     }
   }
 
@@ -556,6 +563,8 @@ export function EdenMarketBackendProvider({
     user,
     products,
     branches,
+    transactions,
+    totalRevenue,
     jwt,
     isAuthenticated: !!jwt && !!user,
     isInitialized,
@@ -573,8 +582,8 @@ export function EdenMarketBackendProvider({
     // ** Analytics methods
     fetchRevenuePerBranch,
     fetchActiveBranchesCount,
+    fetchTotalRevenueByBranch,
     fetchTotalRevenue,
-    fetchTotalTransactions,
     fetchLowStockAlerts,
     fetchLowStockCount,
     fetchBranchAnalytics,

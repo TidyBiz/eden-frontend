@@ -109,13 +109,19 @@ const CashierInterface: React.FC<CashierInterfaceProps> = ({
                   <h3 className="font-semibold text-gray-100">
                     {item.name} - ${item.price}/kg
                   </h3>
-                  {item.isSoldByWeight && <p className="text-gray-300">{item.weight} kg</p>}
+                  {item.isSoldByWeight && (
+                    <p className="text-gray-300">
+                      {parseFloat(item.weight.toFixed(3))} kg
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2">
                     {item.isSoldByWeight ? (
-                      <p className="text-gray-300">{item.weight} kg</p>
+                      <p className="text-gray-300">
+                        {parseFloat(item.weight.toFixed(3))} kg
+                      </p>
                     ) : (
                       <>
                         <button
@@ -142,7 +148,11 @@ const CashierInterface: React.FC<CashierInterfaceProps> = ({
                   </div>
 
                   <div className="text-lg font-bold text-gray-100 w-20 text-right">
-                    ${(item.price * (item.isSoldByWeight ? item.weight : item.quantity)).toFixed(2)}
+                    $
+                    {(
+                      item.price *
+                      (item.isSoldByWeight ? item.weight : item.quantity)
+                    ).toFixed(2)}
                   </div>
 
                   <button
