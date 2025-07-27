@@ -1,6 +1,7 @@
+import { Product } from '@/utils/constants/common'
 import React from 'react'
 
-interface Product {
+interface CartProduct extends Product {
   id: string
   PLU: number
   weight: number
@@ -16,7 +17,7 @@ interface CashierInterfaceProps {
   handleScannerInput: (e: React.KeyboardEvent<HTMLInputElement>) => void
   addProductToCart: (code: string) => void
   isProcessing: boolean
-  cart: Product[]
+  cart: CartProduct[]
   clearCart: () => void
   updateQuantity: (id: string, newQuantity: number) => void
   removeProductFromCart: (id: string) => void
@@ -108,32 +109,40 @@ const CashierInterface: React.FC<CashierInterfaceProps> = ({
                   <h3 className="font-semibold text-gray-100">
                     {item.name} - ${item.price}/kg
                   </h3>
-                  <p className="text-gray-300">
-                    {item.weight} kg
-                  </p>
+                  {item.isSoldByWeight && <p className="text-gray-300">{item.weight} kg</p>}
                 </div>
 
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                      className="w-8 h-8 flex items-center justify-center bg-gray-600 hover:bg-gray-500 rounded text-gray-200 font-bold"
-                    >
-                      -
-                    </button>
-                    <span className="w-12 text-center font-semibold text-gray-100">
-                      {item.quantity}
-                    </span>
-                    <button
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                      className="w-8 h-8 flex items-center justify-center bg-gray-600 hover:bg-gray-500 rounded text-gray-200 font-bold"
-                    >
-                      +
-                    </button>
+                    {item.isSoldByWeight ? (
+                      <p className="text-gray-300">{item.weight} kg</p>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() =>
+                            updateQuantity(item.id, item.quantity - 1)
+                          }
+                          className="w-8 h-8 flex items-center justify-center bg-gray-600 hover:bg-gray-500 rounded text-gray-200 font-bold"
+                        >
+                          -
+                        </button>
+                        <span className="w-12 text-center font-semibold text-gray-100">
+                          {item.quantity}
+                        </span>
+                        <button
+                          onClick={() =>
+                            updateQuantity(item.id, item.quantity + 1)
+                          }
+                          className="w-8 h-8 flex items-center justify-center bg-gray-600 hover:bg-gray-500 rounded text-gray-200 font-bold"
+                        >
+                          +
+                        </button>
+                      </>
+                    )}
                   </div>
 
                   <div className="text-lg font-bold text-gray-100 w-20 text-right">
-                    ${(item.price * item.weight * item.quantity).toFixed(2)}
+                    ${(item.price * (item.isSoldByWeight ? item.weight : item.quantity)).toFixed(2)}
                   </div>
 
                   <button

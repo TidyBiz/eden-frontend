@@ -8,12 +8,25 @@ export type UpdateUserDto = {
   role: EdenUserRoles
 }
 
+export type CreateTransactionDto = {
+  branchId: string
+  cashierId: string
+  items: CreateTransactionItemDto[]
+}
+
+export type CreateTransactionItemDto = {
+  productId: string
+  quantity: number
+  discount?: number
+}
+
 export type EdenUserRoles = 'admin' | 'user'
 
 export type User = {
   id: string
   username: string
   role: EdenUserRoles
+  branchId: string
 }
 
 export type Product = {
@@ -39,4 +52,27 @@ export type Stock = {
   quantity: number
   product: Product
   branch: Branch
+}
+
+export type Transaction = {
+  id: string;
+  branch: Branch;
+  cashier: User;
+  items: TransactionItem[];
+  subtotal: number;
+  tax: number;
+  total: number;
+  status: 'pending' | 'completed' | 'cancelled';
+  createdAt: Date;
+  completedAt: Date;
+}
+
+export type TransactionItem = {
+  id: string;
+  transaction: Transaction;
+  product: Product;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+  discount?: number;
 }

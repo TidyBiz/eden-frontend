@@ -44,6 +44,7 @@ export default function Home() {
     login,
     logout,
     fetchProductByBarcode,
+    createTransaction,
   } = useEdenMarketBackend()
 
   /*************************************************
@@ -160,7 +161,7 @@ export default function Home() {
 
           if (existingItem) {
             return prevCart.map((item) =>
-              item.PLU === PLU ? { ...item, quantity: item.quantity + 1 } : item
+              item.PLU === PLU ? { ...item, quantity: item.quantity + 1, weight: item.weight + weight } : item
             )
           } else {
             return [
@@ -227,16 +228,24 @@ export default function Home() {
           (item) =>
             `• ${item.name} x${item.quantity} - $${(
               item.price *
-              item.quantity *
-              item.weight
+              (item.isSoldByWeight ? item.weight : item.quantity)
             ).toFixed(2)}`
         )
         .join('\n')}`
     )
 
-    if (confirmation) {
+    if (confirmation && user) {
       // Aquí podrías enviar la información a tu backend
       alert('¡Compra confirmada! Gracias por su compra.')
+      createTransaction({
+        branchId: user.branchId,
+        cashierId: user.id,
+        items: cart.map((item) => ({
+          productId: item.id,
+          quantity: item.isSoldByWeight ? item.weight : item.quantity,
+        })),
+      })
+
       // setCart([])
     }
 
