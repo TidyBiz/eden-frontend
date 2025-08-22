@@ -1,11 +1,12 @@
 import type { Dispatch, SetStateAction } from 'react'
-import decode from './decode'
+import decode from '@/utils/lib/decode'
 import type {
   Product,
   User,
   CreateTransactionDto,
   Transaction,
-} from './constants/common'
+} from '@/utils/constants/common'
+import toast from 'react-hot-toast'
 
 export interface CartProduct extends Product {
   quantity: number
@@ -20,9 +21,7 @@ interface CreateCartHandlersParams {
   cart: CartProduct[]
   total: number
   user: User | null
-  createTransaction: (
-    body: CreateTransactionDto
-  ) => Promise<Transaction | null>
+  createTransaction: (body: CreateTransactionDto) => Promise<Transaction | null>
 }
 
 export function createCartHandlers({
@@ -37,10 +36,19 @@ export function createCartHandlers({
 }: CreateCartHandlersParams) {
   const addProductToCart = async (code: string) => {
     setIsProcessing(true)
-    const decodedData = decode(code.trim())
+
+    const { decodedData, error } = decode(code)
+
+    if (error) {
+      toast.error(error)
+      setIsProcessing(false)
+      setTimeout(() => {
+        focusScanner()
+      }, 50)
+    }
 
     if (decodedData) {
-      const { PLU, weight } = decodedData
+      const { PLU, weight } = decodedData || {}
       const product = await fetchProductByBarcode(PLU)
 
       if (product) {
@@ -114,14 +122,16 @@ export function createCartHandlers({
     }, 50)
   }
 
-  const confirmPurchase = () => {
+  const confirmPurchase = async () => {
     if (cart.length === 0) {
-      alert('El carrito está vacío')
+      toast.error('El carrito está vacío')
       setTimeout(() => {
         focusScanner()
       }, 100)
       return
     }
+
+    //TODO: MODAL FACHAAA
 
     const confirmation = window.confirm(
       `¿Confirmar compra por $${total}?\n\nProductos:\n${cart
@@ -135,8 +145,7 @@ export function createCartHandlers({
     )
 
     if (confirmation && user) {
-      alert('¡Compra confirmada! Gracias por su compra.')
-      createTransaction({
+      const res = await createTransaction({
         branchId: user.branchId,
         cashierId: user.id,
         items: cart.map((item) => ({
@@ -144,7 +153,14 @@ export function createCartHandlers({
           quantity: item.isSoldByWeight ? item.weight : item.quantity,
         })),
       })
-      // setCart([])
+
+      if (res && typeof res === 'object' && 'id' in res) {
+        toast.success('¡Compra confirmada! Gracias por su compra.')
+      } else if (typeof res === 'string') {
+        toast.error(res)
+      } else {
+        toast.error('Error al confirmar la compra')
+      }
     }
 
     setTimeout(() => {

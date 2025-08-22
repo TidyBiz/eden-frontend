@@ -12,7 +12,7 @@ import LoginModal from '@/components/modals/login'
 import CashierInterface from '@/components/cashier'
 
 // ** Utils & Types
-import { createCartHandlers } from '@/utils/cart'
+import { createCartHandlers } from '@/utils/lib/cart'
 import type { Product } from '@/utils/constants/common'
 
 const geistSans = Geist({

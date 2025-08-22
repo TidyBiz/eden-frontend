@@ -8,10 +8,10 @@ import {
 } from 'react'
 
 // ** Hooks
-import axios from 'axios'
+import axios, { AxiosError } from 'axios'
 
 // ** Utils
-import { safeLocalStorage } from '@/utils/storage'
+import { safeLocalStorage } from '@/utils/lib/storage'
 
 // ** Types
 import { EDEN_MARKET_BACKEND_URL } from '@/utils/constants/api'
@@ -503,10 +503,21 @@ export function EdenMarketBackendProvider({
           },
         }
       )
+
+      console.log('res', res)
       return res.data
     } catch (error) {
-      console.log('Error creating transaction:', error)
-      return null
+      const axiosError = error as AxiosError
+
+      // Extract error message from response
+      if (
+        axiosError.response?.data &&
+        typeof axiosError.response.data === 'object'
+      ) {
+        const errorData = axiosError.response.data as { message?: string }
+        return errorData.message || 'Error creating transaction'
+      }
+      return 'Error creating transaction'
     }
   }
 
