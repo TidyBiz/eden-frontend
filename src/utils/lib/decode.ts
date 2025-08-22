@@ -5,9 +5,18 @@ interface BarcodeData {
   original: string
 }
 
-export default function decodeBarcodeData(data: string): BarcodeData | null {
+export default function decodeBarcodeData(data: string): {
+  decodedData: BarcodeData | null
+  error: string | null
+} {
   // Limpiar espacios en blanco
   const cleanData = data.trim()
+  if (cleanData.length === 0 || cleanData.length > 13) {
+    return {
+      decodedData: null,
+      error: 'Invalid barcode data',
+    }
+  }
 
   // Si tiene 12 dígitos, añadir un 0 al principio
   let processedData = cleanData
@@ -24,12 +33,18 @@ export default function decodeBarcodeData(data: string): BarcodeData | null {
     const weightNumber = parseInt(weightRaw, 10) / 1000 // Dividir por 1000 para mover la coma 3 lugares
 
     return {
-      PLU: Number(plu),
-      weight: weightNumber,
-      weightRaw,
-      original: processedData,
+      decodedData: {
+        PLU: Number(plu),
+        weight: weightNumber,
+        weightRaw,
+        original: processedData,
+      },
+      error: null,
     }
   }
 
-  return null
+  return {
+    decodedData: null,
+    error: 'Invalid barcode data',
+  }
 }
