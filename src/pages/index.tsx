@@ -12,7 +12,7 @@ import LoginModal from '@/components/modals/login'
 import CashierInterface from '@/components/cashier'
 
 // ** Utils & Types
-import decode from '@/utils/decode'
+import { createCartHandlers } from '@/utils/cart'
 import type { Product } from '@/utils/constants/common'
 
 const geistSans = Geist({
@@ -129,6 +129,23 @@ export default function Home() {
     }
   }, [showUserMenu])
 
+  const {
+    addProductToCart,
+    removeProductFromCart,
+    updateQuantity,
+    confirmPurchase,
+    clearCart,
+  } = createCartHandlers({
+    setIsProcessing,
+    fetchProductByBarcode,
+    setCart,
+    focusScanner,
+    cart,
+    total,
+    user,
+    createTransaction,
+  })
+
   const handleScannerInput = async (
     e: React.KeyboardEvent<HTMLInputElement>
   ) => {
@@ -143,146 +160,6 @@ export default function Home() {
         focusScanner()
       }, 50)
     }
-  }
-
-  const addProductToCart = async (code: string) => {
-    setIsProcessing(true)
-    const decodedData = decode(scannedCode.trim())
-
-    if (decodedData) {
-      const { PLU, weight } = decodedData
-      const product = await fetchProductByBarcode(PLU)
-
-      if (product) {
-        setCart((prevCart) => {
-          const existingItem = prevCart.find((item) => item.PLU === PLU)
-
-          if (existingItem) {
-            const itemWeight =
-              Math.round((existingItem.weight + weight) * 1000) / 1000
-
-            if (itemWeight > 99) {
-              alert(
-                `⚠️ Error: El peso total del item "${product.name}" sería ${itemWeight}kg.\nEl límite máximo por item es 99kg (límite de balanza).\n\nPeso actual: ${existingItem.weight}kg\nPeso a agregar: ${weight}kg`
-              )
-              setIsProcessing(false)
-              setTimeout(() => {
-                focusScanner()
-              }, 50)
-              return prevCart
-            }
-
-            return prevCart.map((item) =>
-              item.PLU === PLU
-                ? {
-                    ...item,
-                    quantity: item.quantity + 1,
-                    weight: Math.round((item.weight + weight) * 1000) / 1000,
-                  }
-                : item
-            )
-          } else {
-            return [...prevCart, { ...product, quantity: 1, weight: weight }]
-          }
-        })
-      } else {
-        alert(`Producto no encontrado: ${code}`)
-      }
-
-      setIsProcessing(false)
-
-      // Re-enfocar después de procesar
-      setTimeout(() => {
-        focusScanner()
-      }, 50)
-    } else {
-      console.log('No se pudo decodificar el código:', scannedCode.trim())
-    }
-  }
-
-  const removeProductFromCart = (id: string) => {
-    setCart((prevCart) => prevCart.filter((item) => item.id !== id))
-
-    // Re-enfocar después de eliminar
-    setTimeout(() => {
-      focusScanner()
-    }, 50)
-  }
-
-  const updateQuantity = (id: string, newQuantity: number) => {
-    if (newQuantity <= 0) {
-      removeProductFromCart(id)
-      return
-    }
-
-    setCart((prevCart) =>
-      prevCart.map((item) =>
-        item.id === id ? { ...item, quantity: newQuantity } : item
-      )
-    )
-
-    // Re-enfocar después de actualizar cantidad
-    setTimeout(() => {
-      focusScanner()
-    }, 50)
-  }
-
-  const confirmPurchase = () => {
-    if (cart.length === 0) {
-      alert('El carrito está vacío')
-      // Re-enfocar después del alert
-      setTimeout(() => {
-        focusScanner()
-      }, 100)
-      return
-    }
-
-    const confirmation = window.confirm(
-      `¿Confirmar compra por $${total}?\n\nProductos:\n${cart
-        .map(
-          (item) =>
-            `• ${item.name} x${item.quantity} - $${(
-              item.price * (item.isSoldByWeight ? item.weight : item.quantity)
-            ).toFixed(2)}`
-        )
-        .join('\n')}`
-    )
-
-    if (confirmation && user) {
-      // Aquí podrías enviar la información a tu backend
-      alert('¡Compra confirmada! Gracias por su compra.')
-      createTransaction({
-        branchId: user.branchId,
-        cashierId: user.id,
-        items: cart.map((item) => ({
-          productId: item.id,
-          quantity: item.isSoldByWeight ? item.weight : item.quantity,
-        })),
-      })
-
-      // setCart([])
-    }
-
-    // Re-enfocar después de cualquier acción
-    setTimeout(() => {
-      focusScanner()
-    }, 100)
-  }
-
-  const clearCart = () => {
-    if (cart.length === 0) return
-
-    const confirmation = window.confirm(
-      '¿Estás seguro de que quieres vaciar el carrito?'
-    )
-    if (confirmation) {
-      setCart([])
-    }
-
-    // Re-enfocar después de cualquier acción
-    setTimeout(() => {
-      focusScanner()
-    }, 100)
   }
 
   /*************************************************
