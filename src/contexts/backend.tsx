@@ -23,6 +23,7 @@ import {
   Branch,
   CreateTransactionDto,
   Transaction,
+  ProductForm,
 } from '@/utils/constants/common'
 
 /*************************************************
@@ -40,15 +41,7 @@ export type LoginResponse = {
 }
 
 export type CreateProductDto = {
-  PLU: number
-  name: string
-  price: number
-  altPrice: number
-  isSoldByWeight: boolean
-  description: string
-  branchId: string
-  stockNumber: number
-  isActive?: boolean
+  products: ProductForm[]
 }
 
 /*************************************************
@@ -293,7 +286,7 @@ export function EdenMarketBackendProvider({
    */
   const createProduct = async (body: CreateProductDto) => {
     try {
-      console.log(typeof body.PLU)
+      console.log(body);
       const res = await axios.post(`${EDEN_MARKET_BACKEND_URL}/product`, body, {
         headers: {
           Authorization: `Bearer ${jwt}`,

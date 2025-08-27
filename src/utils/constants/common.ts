@@ -41,6 +41,18 @@ export type Product = {
   stock: Stock[];
 }
 
+export type ProductForm = {
+  PLU: number;
+  name: string;
+  price: number;
+  altPrice: number;
+  isSoldByWeight: boolean;
+  branchId: string;
+  description: string;
+  isActive: boolean;
+  stockNumber: number;
+}
+
 export type Branch = {
   id: string
   name: string
