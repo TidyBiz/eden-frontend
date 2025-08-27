@@ -5,7 +5,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { useEdenMarketBackend } from '@/contexts/backend'
 
 // ** Types
-import { Branch } from '@/utils/constants/common'
+import { Branch, ProductForm } from '@/utils/constants/common'
 
 interface AddProductsProps {
   isOpen: boolean
@@ -23,12 +23,13 @@ function AddProducts({
 }: AddProductsProps) {
   const modalRef = useRef<HTMLDivElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
-  const [formData, setFormData] = useState({
+  const [products, setProducts] = useState<ProductForm[]>([])
+  const [formData, setFormData] = useState<ProductForm>({
     PLU: 0,
     name: '',
     price: 0,
     altPrice: 0,
-    isSoldByWeight: 'true',
+    isSoldByWeight: true,
     stockNumber: 0,
     branchId: '',
     description: '',
@@ -127,10 +128,23 @@ function AddProducts({
     setFormData({ ...formData, [name]: value })
   }
 
+  const handleChangeBoolean = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const { name, value } = e.target
+    setFormData({ ...formData, [name]: value === 'true' ? true : false })
+  }
+
+  const handleAddProduct = async () => {
+    setProducts([
+      ...products,
+      {
+        ...formData,
+      },
+    ])
+  }
+
   const handleSubmit = async () => {
     await createProduct({
-      ...formData,
-      isSoldByWeight: formData.isSoldByWeight === 'true',
+      products,
     })
     setIsOpen(false)
     if (onProductCreated) {
@@ -160,6 +174,57 @@ function AddProducts({
             className="bg-white dark:bg-slate-900 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
+            <div className="flex flex-col justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Productos
+              </h2>
+              <p className="text-gray-500 mb-4">
+                Aquí puedes ver los productos que vas agregando.
+              </p>
+              <table className="w-full border-collapse border rounded-md border-gray-300 dark:border-gray-700">
+                <thead>
+                  <tr>
+                    <th className="border border-gray-300 dark:border-gray-700 p-2">
+                      Nombre
+                    </th>
+                    <th className="border border-gray-300 dark:border-gray-700 p-2">
+                      Precio
+                    </th>
+                    <th className="border border-gray-300 dark:border-gray-700 p-2">
+                      Precio Alternativo
+                    </th>
+                    <th className="border border-gray-300 dark:border-gray-700 p-2">
+                      Pesable
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {products.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="text-center border border-gray-300 dark:border-gray-700 p-2">
+                        No hay productos agregados
+                      </td>
+                    </tr>
+                  )}
+                  {products.map((product) => (
+                    <tr key={product.PLU}>
+                      <td className="border border-gray-300 dark:border-gray-700 p-2">
+                        {product.name}
+                      </td>
+                      <td className="border border-gray-300 dark:border-gray-700 p-2">
+                        {product.price}
+                      </td>
+                      <td className="border border-gray-300 dark:border-gray-700 p-2">
+                        {product.altPrice}
+                      </td>
+                      <td className="border border-gray-300 dark:border-gray-700 p-2">
+                        {product.isSoldByWeight}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
             <div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700">
               <h2
                 id="modal-title"
@@ -268,8 +333,8 @@ function AddProducts({
                         id="name"
                         className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white"
                         name="isSoldByWeight"
-                        value={formData.isSoldByWeight}
-                        onChange={(e) => handleChangeSelect(e)}
+                        value={formData.isSoldByWeight ? 'true' : 'false'}
+                        onChange={(e) => handleChangeBoolean(e)}
                       >
                         {isSoldByWeightOptions.map((option) => (
                           <option
@@ -337,16 +402,22 @@ function AddProducts({
             </div>
             <div className="flex justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
               <button
-                className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors cursor-pointer"
                 onClick={() => setIsOpen(false)}
               >
-                Cancel
+                Cancelar
               </button>
               <button
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors cursor-pointer"
+                onClick={handleAddProduct}
+              >
+                Agregar
+              </button>
+              <button
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors cursor-pointer"
                 onClick={handleSubmit}
               >
-                Save Products
+                Confirmar
               </button>
             </div>
           </div>
