@@ -10,6 +10,8 @@ import Navbar from '@/components/navbar'
 import AdminInterface from '@/components/admin'
 import LoginModal from '@/components/modals/login'
 import CashierInterface from '@/components/cashier'
+import ConfirmPurchaseModal from '@/components/modals/create-transaction'
+import ClearCartModal from '@/components/modals/create-transaction/clear-cart'
 
 // ** Utils & Types
 import { createCartHandlers } from '@/utils/lib/cart'
@@ -33,6 +35,8 @@ export default function Home() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showLoginModal, setShowLoginModal] = useState(false)
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [showClearCartModal, setShowClearCartModal] = useState(false)
   const [loginError, setLoginError] = useState('')
   const [isLoginLoading, setIsLoginLoading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -135,6 +139,9 @@ export default function Home() {
     updateQuantity,
     confirmPurchase,
     clearCart,
+    handleClearCartConfirm,
+    handleTransactionSuccess,
+    handleTransactionError,
   } = createCartHandlers({
     setIsProcessing,
     fetchProductByBarcode,
@@ -144,6 +151,8 @@ export default function Home() {
     total,
     user,
     createTransaction,
+    setShowConfirmModal,
+    setShowClearCartModal,
   })
 
   const handleScannerInput = async (
@@ -287,6 +296,29 @@ export default function Home() {
             closeLoginModal={closeLoginModal}
             loginError={loginError}
             isLoginLoading={isLoginLoading}
+          />
+        )}
+
+        {/* Modal de Confirmación de Compra */}
+        {showConfirmModal && (
+          <ConfirmPurchaseModal
+            isOpen={showConfirmModal}
+            setIsOpen={setShowConfirmModal}
+            cart={cart}
+            total={total}
+            user={user}
+            createTransaction={createTransaction}
+            onSuccess={handleTransactionSuccess}
+            onError={handleTransactionError}
+          />
+        )}
+
+        {/* Modal de Vaciar Carrito */}
+        {showClearCartModal && (
+          <ClearCartModal
+            isOpen={showClearCartModal}
+            setIsOpen={setShowClearCartModal}
+            onConfirm={handleClearCartConfirm}
           />
         )}
       </div>
