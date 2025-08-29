@@ -22,6 +22,8 @@ interface CreateCartHandlersParams {
   total: number
   user: User | null
   createTransaction: (body: CreateTransactionDto) => Promise<Transaction | null>
+  setShowConfirmModal: (show: boolean) => void
+  setShowClearCartModal: (show: boolean) => void
 }
 
 export function createCartHandlers({
@@ -30,9 +32,8 @@ export function createCartHandlers({
   setCart,
   focusScanner,
   cart,
-  total,
-  user,
-  createTransaction,
+  setShowConfirmModal,
+  setShowClearCartModal,
 }: CreateCartHandlersParams) {
   const addProductToCart = async (code: string) => {
     setIsProcessing(true)
@@ -131,53 +132,32 @@ export function createCartHandlers({
       return
     }
 
-    //TODO: MODAL FACHAAA
-
-    const confirmation = window.confirm(
-      `¿Confirmar compra por $${total}?\n\nProductos:\n${cart
-        .map(
-          (item) =>
-            `• ${item.name} x${item.quantity} - $${(
-              item.price * (item.isSoldByWeight ? item.weight : item.quantity)
-            ).toFixed(2)}`
-        )
-        .join('\n')}`
-    )
-
-    if (confirmation && user) {
-      const res = await createTransaction({
-        branchId: user.branchId,
-        cashierId: user.id,
-        items: cart.map((item) => ({
-          productId: item.id,
-          quantity: item.isSoldByWeight ? item.weight : item.quantity,
-        })),
-      })
-
-      if (res && typeof res === 'object' && 'id' in res) {
-        toast.success('¡Compra confirmada! Gracias por su compra.')
-      } else if (typeof res === 'string') {
-        toast.error(res)
-      } else {
-        toast.error('Error al confirmar la compra')
-      }
-    }
-
-    setTimeout(() => {
-      focusScanner()
-    }, 100)
+    setShowConfirmModal(true)
   }
 
   const clearCart = () => {
     if (cart.length === 0) return
 
-    const confirmation = window.confirm(
-      '¿Estás seguro de que quieres vaciar el carrito?'
-    )
-    if (confirmation) {
-      setCart([])
-    }
+    setShowClearCartModal(true)
+  }
 
+  const handleClearCartConfirm = () => {
+    setCart([])
+    setTimeout(() => {
+      focusScanner()
+    }, 100)
+  }
+
+  const handleTransactionSuccess = () => {
+    setCart([])
+    toast.success('¡Compra confirmada! Gracias por su compra.')
+    setTimeout(() => {
+      focusScanner()
+    }, 100)
+  }
+
+  const handleTransactionError = (error: string) => {
+    toast.error(error)
     setTimeout(() => {
       focusScanner()
     }, 100)
@@ -189,5 +169,8 @@ export function createCartHandlers({
     updateQuantity,
     confirmPurchase,
     clearCart,
+    handleClearCartConfirm,
+    handleTransactionSuccess,
+    handleTransactionError,
   }
 }

@@ -24,6 +24,7 @@ import {
   CreateTransactionDto,
   Transaction,
   ProductForm,
+  Stock,
 } from '@/utils/constants/common'
 
 /*************************************************
@@ -100,6 +101,11 @@ export type EdenMarketBackendValue = {
   fetchLowStockCount: (threshold?: number) => Promise<number>
   fetchBranchAnalytics: () => Promise<BranchAnalytics>
   fetchStockAnalytics: (threshold?: number) => Promise<StockAnalytics>
+  addStockToProduct: (
+    productId: string,
+    branchId: string,
+    quantity: number
+  ) => Promise<Stock | null>
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -286,7 +292,6 @@ export function EdenMarketBackendProvider({
    */
   const createProduct = async (body: CreateProductDto) => {
     try {
-      console.log(body);
       const res = await axios.post(`${EDEN_MARKET_BACKEND_URL}/product`, body, {
         headers: {
           Authorization: `Bearer ${jwt}`,
@@ -558,10 +563,40 @@ export function EdenMarketBackendProvider({
   }
 
   /**
-   * Generates a livepeer JWT based on the body.
-   * @param body - Data to check and generate JWT if valid.
-   * @returns {Promise<object | undefined>} The generated JWT or undefined.
+   * Adds stock to a specific product in a specific branch
+   * @param productId - Product ID
+   * @param branchId - Branch ID
+   * @param quantity - Quantity to add
+   * @returns {Promise<any>} Updated stock data
    */
+  const addStockToProduct = async (
+    productId: string,
+    branchId: string,
+    quantity: number
+  ) => {
+    if (!jwt) {
+      throw new Error('No authentication token')
+    }
+    try {
+      const res = await axios.post(
+        `${EDEN_MARKET_BACKEND_URL}/stock/add-to-product`,
+        {
+          productId,
+          branchId,
+          quantity,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${jwt}`,
+          },
+        }
+      )
+      return res.data
+    } catch (error) {
+      console.log('Error adding stock to product:', error)
+      throw error
+    }
+  }
 
   const value: EdenMarketBackendValue = {
     user,
@@ -592,6 +627,7 @@ export function EdenMarketBackendProvider({
     fetchLowStockCount,
     fetchBranchAnalytics,
     fetchStockAnalytics,
+    addStockToProduct,
   }
 
   return (

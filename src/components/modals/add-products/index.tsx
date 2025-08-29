@@ -7,6 +7,9 @@ import { useEdenMarketBackend } from '@/contexts/backend'
 // ** Types
 import { Branch, ProductForm } from '@/utils/constants/common'
 
+// ** Components
+import ConfirmAddProducts from './confirm-add-products'
+
 interface AddProductsProps {
   isOpen: boolean
   setIsOpen: (isOpen: boolean) => void
@@ -24,6 +27,8 @@ function AddProducts({
   const modalRef = useRef<HTMLDivElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
   const [products, setProducts] = useState<ProductForm[]>([])
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState<ProductForm>({
     PLU: 0,
     name: '',
@@ -142,13 +147,25 @@ function AddProducts({
     ])
   }
 
-  const handleSubmit = async () => {
-    await createProduct({
-      products,
-    })
-    setIsOpen(false)
-    if (onProductCreated) {
-      onProductCreated()
+  const handleSubmit = () => {
+    setIsConfirmModalOpen(true)
+  }
+
+  const handleConfirmSubmit = async () => {
+    setIsSubmitting(true)
+    try {
+      await createProduct({
+        products,
+      })
+      setIsConfirmModalOpen(false)
+      setIsOpen(false)
+      if (onProductCreated) {
+        onProductCreated()
+      }
+    } catch (error) {
+      console.error('Error creating products:', error)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -171,7 +188,7 @@ function AddProducts({
         >
           <div
             ref={modalRef}
-            className="bg-white dark:bg-slate-900 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden"
+            className="bg-white overflow-y-auto dark:bg-slate-900 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex flex-col justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700">
@@ -201,7 +218,10 @@ function AddProducts({
                 <tbody>
                   {products.length === 0 && (
                     <tr>
-                      <td colSpan={5} className="text-center border border-gray-300 dark:border-gray-700 p-2">
+                      <td
+                        colSpan={5}
+                        className="text-center border border-gray-300 dark:border-gray-700 p-2"
+                      >
                         No hay productos agregados
                       </td>
                     </tr>
@@ -218,7 +238,7 @@ function AddProducts({
                         {product.altPrice}
                       </td>
                       <td className="border border-gray-300 dark:border-gray-700 p-2">
-                        {product.isSoldByWeight}
+                        {product.isSoldByWeight ? 'Si' : 'No'}
                       </td>
                     </tr>
                   ))}
@@ -402,7 +422,7 @@ function AddProducts({
             </div>
             <div className="flex justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
               <button
-                className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors cursor-pointer"
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-red-500 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-red-600 transition-colors cursor-pointer"
                 onClick={() => setIsOpen(false)}
               >
                 Cancelar
@@ -414,7 +434,8 @@ function AddProducts({
                 Agregar
               </button>
               <button
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors cursor-pointer"
+                disabled={products.length === 0}
+                className="px-4 py-2 bg-green-600 text-white disabled:opacity-50 disabled:cursor-not-allowed rounded-md hover:bg-green-700 transition-colors cursor-pointer"
                 onClick={handleSubmit}
               >
                 Confirmar
@@ -423,6 +444,15 @@ function AddProducts({
           </div>
         </div>
       )}
+
+      {/* Confirmation Modal */}
+      <ConfirmAddProducts
+        isOpen={isConfirmModalOpen}
+        setIsOpen={setIsConfirmModalOpen}
+        products={products}
+        onConfirm={handleConfirmSubmit}
+        isLoading={isSubmitting}
+      />
     </div>
   )
 }

@@ -4,7 +4,9 @@ import {
   type BranchAnalytics,
   type StockAnalytics,
 } from '@/contexts/backend'
-import AddProducts from '../modals/addProducts'
+import AddProducts from '../modals/add-products'
+import AddStockModal from '../modals/add-stock'
+import { Product } from '@/utils/constants/common'
 
 interface AdminInterfaceProps {
   className?: string
@@ -15,6 +17,8 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
     'overview'
   )
   const [isAddProductsOpen, setIsAddProductsOpen] = useState(false)
+  const [isAddStockOpen, setIsAddStockOpen] = useState(false)
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
 
   const [branchAnalytics, setBranchAnalytics] = useState<BranchAnalytics>({
     revenuePerBranch: [],
@@ -95,6 +99,11 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
       currency: 'ARS',
       minimumFractionDigits: 0,
     }).format(amount)
+  }
+
+  const formatStock = (amount: number) => {
+    // Only show decimals if the number is not a whole number
+    return Number.isInteger(amount) ? amount.toString() : amount.toFixed(2)
   }
 
   const KPICard = ({
@@ -240,7 +249,7 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
         ) : Array.isArray(stockAnalytics.lowStockAlerts) &&
           stockAnalytics.lowStockAlerts.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {stockAnalytics.lowStockAlerts.map((alert) => (
+            {/* {stockAnalytics.lowStockAlerts.map((alert) => (
               <div
                 key={alert.id}
                 className="bg-red-900/20 border border-red-700 rounded-lg p-4"
@@ -264,7 +273,7 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
                   </div>
                 </div>
               </div>
-            ))}
+            ))} */}
           </div>
         ) : (
           <div className="text-gray-400 text-center py-8">
@@ -304,17 +313,21 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
                   Stock Total
                 </th>
                 <th className="text-center py-3 px-4 text-gray-300">Estado</th>
+                <th className="text-center py-3 px-4 text-gray-300">
+                  Añadir stock
+                </th>
               </tr>
             </thead>
             <tbody>
               {products.length > 0 ? (
                 products.map((product) => {
-                  const totalStock = product.stock
-                    .reduce((sum, stock) => sum + stock.quantity, 0)
-                    .toFixed(2)
-                  const isLowStock = stockAnalytics.lowStockAlerts.some(
-                    (alert) => alert.product.id === product.id
+                  const totalStock = product.stock.reduce(
+                    (sum, stock) => sum + stock.quantity,
+                    0
                   )
+                  // const isLowStock = stockAnalytics.lowStockAlerts.some(
+                  //   (alert) => alert.product.id === product.id
+                  // )
 
                   return (
                     <tr
@@ -332,21 +345,36 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
                       </td>
                       <td
                         className={`py-3 px-4 text-right ${
-                          isLowStock ? 'text-red-400' : 'text-gray-100'
+                          // isLowStock ? 'text-red-400' : 'text-gray-100'
+                          'text-gray-100'
                         }`}
                       >
-                        {totalStock}
+                        {formatStock(totalStock)}
                       </td>
+
                       <td className="py-3 px-4 text-center">
                         <span
                           className={`px-2 py-1 rounded-full text-xs ${
-                            isLowStock
-                              ? 'bg-red-900/50 text-red-300 border border-red-700'
-                              : 'bg-green-900/50 text-green-300 border border-green-700'
+                            // isLowStock
+                            // ? 'bg-red-900/50 text-red-300 border border-red-700'
+                            // : 'bg-green-900/50 text-green-300 border border-green-700'
+                            'bg-green-900/50 text-green-300 border border-green-700'
                           }`}
                         >
-                          {isLowStock ? 'Stock Bajo' : 'Normal'}
+                          {/* {isLowStock ? 'Stock Bajo' : 'Normal'} */}
+                          TODO BIEN
                         </span>
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <button
+                          onClick={() => {
+                            setSelectedProduct(product)
+                            setIsAddStockOpen(true)
+                          }}
+                          className="px-3 py-1.5 bg-gray-600 text-gray-200 text-xs rounded-md hover:bg-gray-500 transition-colors cursor-pointer border border-gray-500"
+                        >
+                          Añadir stock
+                        </button>
                       </td>
                     </tr>
                   )
@@ -514,6 +542,14 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
           {activeTab === 'stores' && <StoresTab />}
         </div>
       </div>
+
+      {/* Modals */}
+      <AddStockModal
+        isOpen={isAddStockOpen}
+        setIsOpen={setIsAddStockOpen}
+        product={selectedProduct}
+        onStockAdded={handleProductCreated}
+      />
     </div>
   )
 }

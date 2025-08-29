@@ -69,9 +69,34 @@ const CashierInterface: React.FC<CashierInterfaceProps> = ({
           {isProcessing ? 'Procesando...' : 'Agregar'}
         </button>
       </div>
-      <p className="text-sm text-gray-400 mt-2">
-        💡 Códigos de ejemplo: 1234567890, 2000100003909, 3456789012, 4567890123
-      </p>
+      <div className="flex items-center gap-2 mt-2">
+        <p className="text-sm text-gray-400">
+          💡 Códigos de ejemplo: 0000001001401, 0000002000010, 0000003000010,
+          0000004000010
+        </p>
+        <button
+          onClick={() => {
+            const codes = [
+              '0000001001401',
+              '0000002000010',
+              '0000003000010',
+              '0000004000010',
+            ]
+            const randomCode = codes[Math.floor(Math.random() * codes.length)]
+            const currentCode = scannedCode
+
+            setScannedCode(randomCode)
+
+            if (currentCode) {
+              navigator.clipboard.writeText(currentCode)
+            }
+          }}
+          className="text-xs text-gray-500 hover:text-gray-300 bg-transparent border border-gray-600 hover:border-gray-500 rounded px-2 py-1 transition-colors"
+          title="Intercambiar con un código aleatorio"
+        >
+          Copiar Random
+        </button>
+      </div>
       <p className="text-xs text-blue-400 mt-1">
         🎯 El campo está siempre activo para escanear códigos automáticamente
       </p>
