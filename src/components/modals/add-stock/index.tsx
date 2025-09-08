@@ -1,6 +1,12 @@
-import { Product } from '@/utils/constants/common'
+// ** React
 import React, { useState, useRef, useEffect } from 'react'
+import { Plus, Minus, X } from 'lucide-react'
+
+// ** Contexts
 import { useEdenMarketBackend } from '@/contexts/backend'
+
+// ** Types
+import { Product } from '@/utils/constants/common'
 
 interface AddStockModalProps {
   isOpen: boolean
@@ -23,6 +29,36 @@ export default function AddStockModal({
 
   const { branches, addStockToProduct } = useEdenMarketBackend()
 
+  const resetModalState = () => {
+    setStockQuantity('')
+    setSelectedBranchId('')
+    setError('')
+  }
+
+  const incrementStock = () => {
+    const currentValue = parseFloat(stockQuantity) || 0
+    const step = product?.isSoldByWeight ? 0.1 : 1
+    const newValue = currentValue + step
+
+    if (product?.isSoldByWeight) {
+      setStockQuantity(parseFloat(newValue.toFixed(2)).toString())
+    } else {
+      setStockQuantity(newValue.toString())
+    }
+  }
+
+  const decrementStock = () => {
+    const currentValue = parseFloat(stockQuantity) || 0
+    const step = product?.isSoldByWeight ? 0.1 : 1
+    const newValue = Math.max(0, currentValue - step)
+
+    if (product?.isSoldByWeight) {
+      setStockQuantity(parseFloat(newValue.toFixed(2)).toString())
+    } else {
+      setStockQuantity(newValue.toString())
+    }
+  }
+
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -33,6 +69,8 @@ export default function AddStockModal({
     if (isOpen) {
       document.addEventListener('keydown', handleEscape)
       document.body.style.overflow = 'hidden'
+    } else {
+      resetModalState()
     }
 
     return () => {
@@ -56,10 +94,21 @@ export default function AddStockModal({
       return
     }
 
+    if (!product?.isSoldByWeight && !Number.isInteger(quantity)) {
+      setError(
+        'Para este producto solo se permiten cantidades enteras (sin decimales)'
+      )
+      return
+    }
+
+    const finalQuantity = product?.isSoldByWeight
+      ? parseFloat(quantity.toFixed(2))
+      : quantity
+
     setIsLoading(true)
 
     try {
-      await addStockToProduct(product.id, selectedBranchId, quantity)
+      await addStockToProduct(product.id, selectedBranchId, finalQuantity)
 
       setStockQuantity('')
       setSelectedBranchId('')
@@ -81,7 +130,10 @@ export default function AddStockModal({
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4"
-      onClick={() => setIsOpen(false)}
+      onClick={() => {
+        setIsOpen(false)
+        resetModalState()
+      }}
     >
       <div
         ref={modalRef}
@@ -97,22 +149,13 @@ export default function AddStockModal({
           </h2>
           <button
             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
-            onClick={() => setIsOpen(false)}
+            onClick={() => {
+              setIsOpen(false)
+              resetModalState()
+            }}
             aria-label="Close modal"
           >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <X className="w-5 h-5" />
           </button>
         </div>
 
@@ -180,17 +223,50 @@ export default function AddStockModal({
                 Cantidad de Stock (
                 {product?.isSoldByWeight ? 'en Kg' : 'en Unidades'})
               </label>
-              <input
-                type="number"
-                id="stockQuantity"
-                step="0.01"
-                min="0"
-                value={stockQuantity}
-                onChange={(e) => setStockQuantity(e.target.value)}
-                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                placeholder="Ingrese la cantidad"
-                required
-              />
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={decrementStock}
+                  className="p-2 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  aria-label="Decrementar cantidad"
+                >
+                  <Minus className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                </button>
+                <input
+                  type="number"
+                  id="stockQuantity"
+                  step={product?.isSoldByWeight ? '0.01' : '1'}
+                  min="0"
+                  value={stockQuantity}
+                  onChange={(e) => {
+                    const value = e.target.value
+
+                    if (!product?.isSoldByWeight && value.includes('.')) {
+                      return
+                    }
+
+                    if (product?.isSoldByWeight && value.includes('.')) {
+                      const parts = value.split('.')
+                      if (parts[1] && parts[1].length > 2) {
+                        return
+                      }
+                    }
+
+                    setStockQuantity(value)
+                  }}
+                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  placeholder={product?.isSoldByWeight ? 'Ej: 1.5' : 'Ej: 10'}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={incrementStock}
+                  className="p-2 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  aria-label="Incrementar cantidad"
+                >
+                  <Plus className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                </button>
+              </div>
             </div>
           </div>
 
@@ -203,7 +279,10 @@ export default function AddStockModal({
           <div className="flex justify-end space-x-3 mt-6">
             <button
               type="button"
-              onClick={() => setIsOpen(false)}
+              onClick={() => {
+                setIsOpen(false)
+                resetModalState()
+              }}
               disabled={isLoading}
               className="px-4 py-2 text-gray-600 dark:text-gray-400 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >

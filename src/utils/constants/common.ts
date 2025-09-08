@@ -88,3 +88,26 @@ export type TransactionItem = {
   totalPrice: number
   discount?: number
 }
+
+export type BranchColor = {
+  name: string
+  textColor: string
+  bgColor: string
+}
+
+export const BRANCH_COLORS: BranchColor[] = [
+  { name: 'blue', textColor: 'text-blue-300', bgColor: 'bg-blue-900/30' },
+  { name: 'green', textColor: 'text-green-300', bgColor: 'bg-green-900/30' },
+  { name: 'purple', textColor: 'text-purple-300', bgColor: 'bg-purple-900/30' },
+  { name: 'orange', textColor: 'text-orange-300', bgColor: 'bg-orange-900/30' },
+  { name: 'pink', textColor: 'text-pink-300', bgColor: 'bg-pink-900/30' },
+  { name: 'cyan', textColor: 'text-cyan-300', bgColor: 'bg-cyan-900/30' },
+  { name: 'yellow', textColor: 'text-yellow-300', bgColor: 'bg-yellow-900/30' },
+  { name: 'red', textColor: 'text-red-300', bgColor: 'bg-red-900/30' },
+  { name: 'indigo', textColor: 'text-indigo-300', bgColor: 'bg-indigo-900/30' },
+  {
+    name: 'emerald',
+    textColor: 'text-emerald-300',
+    bgColor: 'bg-emerald-900/30',
+  },
+]
