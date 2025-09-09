@@ -58,7 +58,17 @@ export type RevenuePerBranch = {
 export type LowStockAlert = {
   id: string
   product: Product
+  branch: Branch
   currentStock: number
+  threshold: number
+}
+
+export type StockByBranch = {
+  id: string
+  product: Product
+  branch: Branch
+  quantity: number
+  isLowStock: boolean
   threshold: number
 }
 
@@ -101,6 +111,7 @@ export type EdenMarketBackendValue = {
   fetchLowStockCount: (threshold?: number) => Promise<number>
   fetchBranchAnalytics: () => Promise<BranchAnalytics>
   fetchStockAnalytics: (threshold?: number) => Promise<StockAnalytics>
+  fetchStockByBranch: (branchId?: string) => Promise<StockByBranch[]>
   addStockToProduct: (
     productId: string,
     branchId: string,
@@ -486,6 +497,31 @@ export function EdenMarketBackendProvider({
   }
 
   /**
+   * Fetches stock data by branch
+   * @param branchId - Optional branch ID to filter by
+   */
+  const fetchStockByBranch = async (
+    branchId?: string
+  ): Promise<StockByBranch[]> => {
+    if (!jwt || !user?.id) return []
+    try {
+      const url = branchId
+        ? `${EDEN_MARKET_BACKEND_URL}/stock/analytics/by-branch?branchId=${branchId}`
+        : `${EDEN_MARKET_BACKEND_URL}/stock/analytics/by-branch`
+
+      const res = await axios.get(url, {
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+        },
+      })
+      return res.data
+    } catch (error) {
+      console.log('Error fetching stock by branch:', error)
+      return []
+    }
+  }
+
+  /**
    * Creates a new transaction in the backend
    * @param body - Transaction data to create
    */
@@ -627,6 +663,7 @@ export function EdenMarketBackendProvider({
     fetchLowStockCount,
     fetchBranchAnalytics,
     fetchStockAnalytics,
+    fetchStockByBranch,
     addStockToProduct,
   }
 
