@@ -6,6 +6,8 @@ import {
   Transaction,
 } from '@/utils/constants/common'
 
+type PaymentMethod = 'cash' | 'transfer' | 'credit'
+
 interface ConfirmPurchaseModalProps {
   isOpen: boolean
   setIsOpen: (isOpen: boolean) => void
@@ -30,6 +32,10 @@ export default function ConfirmPurchaseModal({
   const overlayRef = useRef<HTMLDivElement>(null)
   const modalRef = useRef<HTMLDivElement>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [selectedPaymentMethod, setSelectedPaymentMethod] =
+    useState<PaymentMethod | null>(null)
+  const [showCreditInput, setShowCreditInput] = useState(false)
+  const [creditCustomerName, setCreditCustomerName] = useState('')
 
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
@@ -55,8 +61,22 @@ export default function ConfirmPurchaseModal({
     }
   }
 
+  const handlePaymentMethodSelect = (method: PaymentMethod) => {
+    setSelectedPaymentMethod(method)
+    if (method === 'credit') {
+      setShowCreditInput(true)
+    } else {
+      setShowCreditInput(false)
+    }
+  }
+
   const handleConfirmPurchase = async () => {
-    if (!user) {
+    if (!user || !selectedPaymentMethod) {
+      return
+    }
+
+    if (selectedPaymentMethod === 'credit' && !creditCustomerName.trim()) {
+      onError('Por favor, complete los datos del cliente para venta a crédito')
       return
     }
 
@@ -69,6 +89,12 @@ export default function ConfirmPurchaseModal({
           productId: item.id,
           quantity: item.isSoldByWeight ? item.weight : item.quantity,
         })),
+        paymentMethod: selectedPaymentMethod,
+        ...(selectedPaymentMethod === 'credit' && {
+          creditCustomer: {
+            name: creditCustomerName,
+          },
+        }),
       })
 
       if (res && typeof res === 'object' && 'id' in res) {
@@ -182,6 +208,72 @@ export default function ConfirmPurchaseModal({
               </div>
             </div>
           </div>
+
+          {/* Payment Method Section */}
+          <div className="mb-6">
+            <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">
+              Método de Pago:
+            </h3>
+            <div className="flex gap-2 flex-wrap">
+              <button
+                className={`px-4 py-2 rounded-md border transition-colors ${
+                  selectedPaymentMethod === 'cash'
+                    ? 'bg-green-100 dark:bg-green-900 border-green-500 text-green-700 dark:text-green-300'
+                    : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+                onClick={() => handlePaymentMethodSelect('cash')}
+                disabled={isLoading}
+              >
+                Efectivo
+              </button>
+              <button
+                className={`px-4 py-2 rounded-md border transition-colors ${
+                  selectedPaymentMethod === 'transfer'
+                    ? 'bg-blue-100 dark:bg-blue-900 border-blue-500 text-blue-700 dark:text-blue-300'
+                    : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+                onClick={() => handlePaymentMethodSelect('transfer')}
+                disabled={isLoading}
+              >
+                Transferencia
+              </button>
+              <button
+                className={`px-4 py-2 rounded-md border transition-colors ${
+                  selectedPaymentMethod === 'credit'
+                    ? 'bg-orange-100 dark:bg-orange-900 border-orange-500 text-orange-700 dark:text-orange-300'
+                    : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+                onClick={() => handlePaymentMethodSelect('credit')}
+                disabled={isLoading}
+              >
+                Fiado
+              </button>
+            </div>
+
+            {/* Credit Input Section */}
+            {showCreditInput && (
+              <div className="mt-4 p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
+                <h4 className="font-medium text-orange-800 dark:text-orange-200 mb-3">
+                  Datos del Cliente (Fiado):
+                </h4>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Nombre del Cliente:
+                    </label>
+                    <input
+                      type="text"
+                      value={creditCustomerName}
+                      onChange={(e) => setCreditCustomerName(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-gray-100"
+                      placeholder="Ingrese el nombre del cliente"
+                      disabled={isLoading}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="flex justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
@@ -195,7 +287,7 @@ export default function ConfirmPurchaseModal({
           <button
             className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleConfirmPurchase}
-            disabled={isLoading}
+            disabled={isLoading || !selectedPaymentMethod}
           >
             {isLoading ? (
               <div className="flex items-center">

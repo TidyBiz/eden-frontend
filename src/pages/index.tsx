@@ -82,6 +82,7 @@ export default function Home() {
 
   // Mantener el focus en el input para capturar códigos del escáner
   useEffect(() => {
+    if (showConfirmModal) return
     // Focus inicial
     focusScanner()
 
@@ -114,7 +115,7 @@ export default function Home() {
       window.removeEventListener('focus', focusScanner)
       clearInterval(intervalId)
     }
-  }, [focusScanner, showLoginModal])
+  }, [focusScanner, showLoginModal, showConfirmModal])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
