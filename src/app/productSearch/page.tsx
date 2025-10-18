@@ -1,8 +1,8 @@
-// ** React
+// Migración de la página de búsqueda de productos
+'use client'
 import React, { useState } from 'react'
 
-////////////////////////////////////////////////////////////
-export default function ProductSearch() {
+export default function ProductSearchPage() {
   const [searchInput, setSearchInput] = useState('')
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
