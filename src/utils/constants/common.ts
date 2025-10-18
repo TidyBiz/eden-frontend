@@ -12,6 +12,11 @@ export type CreateTransactionDto = {
   branchId: string
   cashierId: string
   items: CreateTransactionItemDto[]
+  paymentMethod?: 'cash' | 'transfer' | 'credit'
+  creditCustomer?: {
+    id?: string
+    name: string
+  }
 }
 
 export type CreateTransactionItemDto = {
