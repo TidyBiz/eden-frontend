@@ -37,6 +37,8 @@ interface CartProduct extends Product {
   weight: number
 }
 
+import CourierIndex from "@/components/courier";
+
 export default function HomePage() {
   const [cart, setCart] = useState<CartProduct[]>([])
   const [scannedCode, setScannedCode] = useState("")
@@ -49,21 +51,23 @@ export default function HomePage() {
   const [loginError, setLoginError] = useState("")
   const [isLoginLoading, setIsLoginLoading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const [showDeliveryForm, setShowDeliveryForm] = useState(false)
 
   const { user, isAuthenticated, isInitialized, login, logout, fetchProductByBarcode, createTransaction } =
     useEdenMarketBackend()
 
   // Scanner focus logic
+  // Evitar focus automático si hay un modal de pedido abierto
   const focusScanner = useCallback(() => {
-    if (showLoginModal) return
+    if (showLoginModal || showConfirmModal || showClearCartModal) return;
     if (inputRef.current && !inputRef.current.disabled) {
       setTimeout(() => {
-        if (inputRef.current && !showLoginModal) {
-          inputRef.current.focus()
+        if (inputRef.current && !showLoginModal && !showConfirmModal && !showClearCartModal) {
+          inputRef.current.focus();
         }
-      }, 10)
+      }, 10);
     }
-  }, [showLoginModal])
+  }, [showLoginModal, showConfirmModal, showClearCartModal]);
 
   useEffect(() => {
     const newTotal = cart.reduce(
@@ -74,31 +78,35 @@ export default function HomePage() {
   }, [cart])
 
   useEffect(() => {
-    if (showConfirmModal) return
-    focusScanner()
-    const events = ["click", "blur", "focusout", "mousedown", "keydown"]
+    // Si hay algún modal abierto, o el formulario de pedido está abierto, no registrar eventos ni intervalos de focus
+    if (showLoginModal || showConfirmModal || showClearCartModal || showDeliveryForm) return;
+    focusScanner();
+    const events = ["click", "blur", "focusout", "mousedown", "keydown"];
     events.forEach((event) => {
-      document.addEventListener(event, focusScanner, true)
-    })
-    window.addEventListener("focus", focusScanner)
+      document.addEventListener(event, focusScanner, true);
+    });
+    window.addEventListener("focus", focusScanner);
     const intervalId = setInterval(() => {
       if (
         document.activeElement !== inputRef.current &&
         inputRef.current &&
         !inputRef.current.disabled &&
-        !showLoginModal
+        !showLoginModal &&
+        !showConfirmModal &&
+        !showClearCartModal &&
+        !showDeliveryForm
       ) {
-        focusScanner()
+        focusScanner();
       }
-    }, 100)
+    }, 100);
     return () => {
       events.forEach((event) => {
-        document.removeEventListener(event, focusScanner, true)
-      })
-      window.removeEventListener("focus", focusScanner)
-      clearInterval(intervalId)
-    }
-  }, [focusScanner, showLoginModal, showConfirmModal])
+        document.removeEventListener(event, focusScanner, true);
+      });
+      window.removeEventListener("focus", focusScanner);
+      clearInterval(intervalId);
+    };
+  }, [focusScanner, showLoginModal, showConfirmModal, showClearCartModal, showDeliveryForm]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -383,6 +391,8 @@ export default function HomePage() {
           <WelcomeScreen />
         ) : user?.role === "admin" ? (
           <AdminInterface />
+        ) : user?.role === "courier" ? (
+          <CourierIndex />
         ) : (
           <CashierInterface
             inputRef={inputRef}
@@ -397,6 +407,8 @@ export default function HomePage() {
             removeProductFromCart={removeProductFromCart}
             total={total}
             confirmPurchase={confirmPurchase}
+            showDeliveryForm={showDeliveryForm}
+            setShowDeliveryForm={setShowDeliveryForm}
           />
         )}
 

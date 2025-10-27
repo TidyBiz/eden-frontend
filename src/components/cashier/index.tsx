@@ -1,7 +1,8 @@
 "use client"
 
 import type { Product } from "@/utils/constants/common"
-import type React from "react"
+import React, { useState } from "react";
+// ...existing code...
 
 interface CartProduct extends Product {
   id: string
@@ -25,7 +26,12 @@ interface CashierInterfaceProps {
   removeProductFromCart: (id: string) => void
   total: number
   confirmPurchase: () => void
+  showDeliveryForm: boolean
+  setShowDeliveryForm: (show: boolean) => void
 }
+
+// ...existing code...
+import CreateDeliveryOrderForm from "./delivery/CreateDeliveryOrderForm";
 
 const CashierInterface: React.FC<CashierInterfaceProps> = ({
   inputRef,
@@ -40,9 +46,36 @@ const CashierInterface: React.FC<CashierInterfaceProps> = ({
   removeProductFromCart,
   total,
   confirmPurchase,
-}) => (
-  <div>
-    {/* Scanner Input */}
+  showDeliveryForm,
+  setShowDeliveryForm,
+}) => {
+  return (
+    <div>
+      {/* Botón para crear pedido de envío */}
+      <div className="flex justify-end mb-6">
+        <button
+          className="bg-[#598C30] hover:bg-[#4E7526] text-white font-bold py-2 px-4 rounded-xl shadow transition-all duration-200 border-2 border-[#273C1F]"
+          onClick={() => setShowDeliveryForm(true)}
+        >
+          Crear pedido de envío
+        </button>
+      </div>
+
+      {/* Modal/Formulario para crear pedido de envío */}
+      {showDeliveryForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 border-2 border-[#598C30] w-full max-w-lg relative">
+            <button
+              className="absolute top-4 right-4 text-[#598C30] hover:text-[#273C1F] text-2xl font-bold"
+              onClick={() => setShowDeliveryForm(false)}
+            >
+              ×
+            </button>
+            <CreateDeliveryOrderForm />
+          </div>
+        </div>
+      )}
+  {/* Scanner Input */}
     <div className="bg-[#F4F1EA] rounded-2xl shadow-xl p-6 mb-6 border-2 border-[#C1E3A4]">
       <label htmlFor="scanner" className="block text-xl font-bold text-[#273C1F] mb-4 flex items-center gap-3">
         <span className="text-3xl">🔍</span>
@@ -58,8 +91,9 @@ const CashierInterface: React.FC<CashierInterfaceProps> = ({
           onKeyDown={handleScannerInput}
           placeholder="Escanee un código o escriba manualmente..."
           className="flex-1 px-5 py-4 border-2 border-[#0aa65d] rounded-xl focus:ring-4 focus:ring-[#0aa65d]/30 focus:border-[#598C30] focus:outline-none text-lg bg-white focus:bg-[#F4F1EA] transition-all text-[#273C1F] placeholder-[#598C30] shadow-inner font-medium"
-          disabled={isProcessing}
+          // disabled={isProcessing}
           autoComplete="off"
+          autoFocus={!showDeliveryForm}
         />
         <button
           onClick={() => addProductToCart(scannedCode.trim())}
@@ -193,6 +227,7 @@ const CashierInterface: React.FC<CashierInterfaceProps> = ({
       )}
     </div>
   </div>
-)
+  )
+}
 
 export default CashierInterface
