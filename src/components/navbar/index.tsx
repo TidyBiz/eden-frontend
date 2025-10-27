@@ -1,8 +1,7 @@
-// ** React
-import React from 'react'
+"use client"
 
 // ** Types
-import { User } from '@/utils/constants/common'
+import type { User } from "@/utils/constants/common"
 
 ////////////////////////////////////////////////////////////
 export default function Navbar({
@@ -21,52 +20,41 @@ export default function Navbar({
   showUserMenu: boolean
 }) {
   return (
-    <div className="bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+    <div className="bg-gradient-to-r from-[#598C30] to-[#4E7526] rounded-2xl shadow-xl p-6 mb-6 border-2 border-[#273C1F]">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Eden Market</h1>
-          <p className="text-gray-300">Sistema de Carrito con Escáner</p>
+          <h1 className="text-3xl font-bold text-[#F4F1EA] mb-2 tracking-tight">Eden Market</h1>
+          <p className="text-[#C1E3A4] font-medium">Sistema de Carrito con Escáner</p>
         </div>
         <div className="relative user-menu-container">
           <div className="flex items-center gap-3">
             <div className="text-right">
-              <p className="text-sm text-gray-300">
-                {isLoggedIn ? user?.username || 'Usuario' : 'Invitado'}
+              <p className="text-sm text-[#F4F1EA] font-semibold">
+                {isLoggedIn ? user?.username || "Usuario" : "Invitado"}
               </p>
-              <p className="text-xs text-gray-400">
-                {isLoggedIn ? user?.role || 'user' : 'No autenticado'}
-              </p>
+              <p className="text-xs text-[#C1E3A4]">{isLoggedIn ? user?.role || "user" : "No autenticado"}</p>
             </div>
             <button
               onClick={toggleUserMenu}
-              className="w-10 h-10 bg-blue-600 hover:bg-blue-700 rounded-full flex items-center justify-center text-white font-semibold transition-colors"
+              className="w-10 h-10 bg-[#0aa65d] hover:bg-[#0aa65d]/80 rounded-full flex items-center justify-center text-white font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 border-2 border-[#F4F1EA]"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                  clipRule="evenodd"
-                />
+                <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
               </svg>
             </button>
           </div>
 
           {/* Dropdown Menu */}
           {showUserMenu && (
-            <div className="absolute right-0 mt-2 w-48 bg-gray-700 rounded-lg shadow-lg border border-gray-600 z-50">
+            <div className="absolute right-0 mt-2 w-48 bg-[#273C1F] rounded-xl shadow-2xl border-2 border-[#598C30] z-50">
               <div className="py-2">
                 {isLoggedIn ? (
                   <>
                     <button
                       onClick={handleLogout}
-                      className="w-full px-4 py-2 text-left text-gray-300 hover:bg-gray-600 transition-colors flex items-center gap-2"
+                      className="w-full px-4 py-2 text-left text-[#F4F1EA] hover:bg-[#598C30] transition-all duration-200 flex items-center gap-2 font-medium rounded-lg mx-1"
                     >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -81,14 +69,9 @@ export default function Navbar({
                   <>
                     <button
                       onClick={handleLogin}
-                      className="w-full px-4 py-2 text-left text-gray-300 hover:bg-gray-600 transition-colors flex items-center gap-2"
+                      className="w-full px-4 py-2 text-left text-[#F4F1EA] hover:bg-[#598C30] transition-all duration-200 flex items-center gap-2 font-medium rounded-lg mx-1"
                     >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"

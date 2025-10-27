@@ -1,3 +1,4 @@
+"use client"
 // ** React
 import {
   ReactNode,
@@ -40,6 +41,31 @@ export type LoginResponse = {
   access_token: string
   user: User
 }
+// Delivery order types
+export type DeliveryOrderItem = {
+  productId: string;
+  quantity: number;
+};
+
+export type CreateDeliveryOrderDto = {
+  address: string;
+  deliveryTime: string;
+  cashierId: string;
+  courierId: string;
+  items: DeliveryOrderItem[];
+};
+
+export type DeliveryOrder = {
+  id: string;
+  address: string;
+  deliveryTime: string;
+  status: string;
+  cashierId: string;
+  courierId: string;
+  items: DeliveryOrderItem[];
+  createdAt: string;
+  updatedAt: string;
+};
 
 export type CreateProductDto = {
   products: ProductForm[]
@@ -117,6 +143,11 @@ export type EdenMarketBackendValue = {
     branchId: string,
     quantity: number
   ) => Promise<Stock | null>
+  // Delivery order methods
+  createDeliveryOrder: (body: CreateDeliveryOrderDto) => Promise<DeliveryOrder | null>
+  fetchDeliveryOrders: (params?: Record<string, string>) => Promise<DeliveryOrder[]>
+  updateDeliveryOrderStatus: (id: string, status: string) => Promise<DeliveryOrder | null>
+  fetchCouriers: () => Promise<User[]>
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -133,6 +164,20 @@ export function EdenMarketBackendProvider({
   children: ReactNode
 }) {
   /*************************************************
+  // Obtener usuarios con rol 'courier'
+  const fetchCouriers = async (): Promise<User[]> => {
+    if (!jwt) return [];
+    try {
+      const res = await axios.get(`${EDEN_MARKET_BACKEND_URL}/user`, {
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
+      // Filtrar por rol 'courier' (o 'cadete' si así lo llamas en el backend)
+      return res.data.filter((u: User) => u.role === 'courier' || u.role === 'cadete');
+    } catch (error) {
+      console.log('Error fetching couriers:', error);
+      return [];
+    }
+  };
    *                  States                       *
    *************************************************/
   const [user, setUser] = useState<User | null>(null)
@@ -162,6 +207,60 @@ export function EdenMarketBackendProvider({
   /*************************************************
    *                  Functions                    *
    *************************************************/
+
+  // Delivery order DTOs ya exportados arriba
+
+  // Crear pedido de envío
+  const createDeliveryOrder = async (body: CreateDeliveryOrderDto): Promise<DeliveryOrder | null> => {
+    try {
+      const res = await axios.post(
+        `${EDEN_MARKET_BACKEND_URL}/delivery-order`,
+        body,
+        {
+          headers: { Authorization: `Bearer ${jwt}` },
+        }
+      );
+      return res.data;
+    } catch (error) {
+      console.log('Error creando pedido de envío:', error);
+      return null;
+    }
+  };
+
+  // Listar pedidos de envío (puede filtrar por cashier, courier, estado, etc)
+  const fetchDeliveryOrders = async (params?: Record<string, string>): Promise<DeliveryOrder[]> => {
+    try {
+      let url = `${EDEN_MARKET_BACKEND_URL}/delivery-order`;
+      if (params) {
+        const query = new URLSearchParams(params).toString();
+        url += `?${query}`;
+      }
+      const res = await axios.get(url, {
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
+      return res.data;
+    } catch (error) {
+      console.log('Error listando pedidos de envío:', error);
+      return [];
+    }
+  };
+
+  // Actualizar estado de pedido de envío
+  const updateDeliveryOrderStatus = async (id: string, status: string): Promise<DeliveryOrder | null> => {
+    try {
+      const res = await axios.patch(
+        `${EDEN_MARKET_BACKEND_URL}/delivery-order/${id}/status`,
+        { status },
+        {
+          headers: { Authorization: `Bearer ${jwt}` },
+        }
+      );
+      return res.data;
+    } catch (error) {
+      console.log('Error actualizando estado del pedido:', error);
+      return null;
+    }
+  };
 
   /**
    * Logs in a user with username and password
@@ -634,6 +733,22 @@ export function EdenMarketBackendProvider({
     }
   }
 
+  // Definir fetchCouriers antes del objeto value
+  // Obtener usuarios con rol 'courier'
+  const fetchCouriers = async (): Promise<User[]> => {
+    if (!jwt) return [];
+    try {
+      const res = await axios.get(`${EDEN_MARKET_BACKEND_URL}/user`, {
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
+      // Filtrar por rol 'courier' (o 'cadete' si así lo llamas en el backend)
+      return res.data.filter((u: User) => u.role === 'courier' || u.role === 'cadete');
+    } catch (error) {
+      console.log('Error fetching couriers:', error);
+      return [];
+    }
+  };
+
   const value: EdenMarketBackendValue = {
     user,
     products,
@@ -665,6 +780,11 @@ export function EdenMarketBackendProvider({
     fetchStockAnalytics,
     fetchStockByBranch,
     addStockToProduct,
+    // Delivery order methods
+    createDeliveryOrder,
+    fetchDeliveryOrders,
+  updateDeliveryOrderStatus,
+  fetchCouriers,
   }
 
   return (
@@ -677,3 +797,21 @@ export function EdenMarketBackendProvider({
 export function useEdenMarketBackend() {
   return useContext(EdenMarketBackendContext)
 }
+
+/**
+ * Tipos exportados para uso en componentes
+ */
+
+export type Product = {
+  id: string;
+  name: string;
+  price: number;
+  // Agrega otros campos según tu modelo
+};
+
+export type User = {
+  id: string;
+  username: string;
+  role: string;
+  // Agrega otros campos según tu modelo
+};
