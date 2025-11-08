@@ -1,7 +1,7 @@
 "use client"
 
 import type { Product } from "@/utils/constants/common"
-import React, { useState } from "react";
+import React from "react";
 // ...existing code...
 
 interface CartProduct extends Product {

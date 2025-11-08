@@ -19,7 +19,7 @@ import ClearCartModal from "@/components/modals/create-transaction/clear-cart"
 
 // ** Utils & Types
 import { createCartHandlers } from "@/utils/lib/cart"
-import type { Product } from "@/utils/constants/common"
+import type { Product, User } from "@/utils/constants/common"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,6 +36,8 @@ interface CartProduct extends Product {
   quantity: number
   weight: number
 }
+
+// User type is imported from "@/utils/constants/common"
 
 import CourierIndex from "@/components/courier";
 
@@ -374,12 +376,12 @@ export default function HomePage() {
   }
 
   return (
-    <div className={`${geistSans.className} min-h-screen bg-[#F4F1EA] p-4`}>
+    <div className={`${geistSans.className} ${chewy.className} min-h-screen bg-[#F4F1EA] p-4`}>
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <Navbar
           isLoggedIn={isAuthenticated}
-          user={user}
+          user={user as User | null}
           handleLogin={openLoginModal}
           handleLogout={handleLogout}
           toggleUserMenu={toggleUserMenu}
@@ -389,9 +391,9 @@ export default function HomePage() {
         {/* Contenido condicional basado en el estado del usuario */}
         {!isAuthenticated ? (
           <WelcomeScreen />
-        ) : user?.role === "admin" ? (
+        ) : String((user as User | null)?.role) === "admin" ? (
           <AdminInterface />
-        ) : user?.role === "courier" ? (
+        ) : String((user as User | null)?.role) === "courier" ? (
           <CourierIndex />
         ) : (
           <CashierInterface
