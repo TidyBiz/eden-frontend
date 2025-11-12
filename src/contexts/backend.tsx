@@ -51,7 +51,8 @@ export type CreateDeliveryOrderDto = {
   address: string;
   deliveryTime: string;
   cashierId: string;
-  courierId: string;
+  cadeteId?: number;
+  branchId: string;
   items: DeliveryOrderItem[];
 };
 
@@ -145,7 +146,7 @@ export type EdenMarketBackendValue = {
   ) => Promise<Stock | null>
   // Delivery order methods
   createDeliveryOrder: (body: CreateDeliveryOrderDto) => Promise<DeliveryOrder | null>
-  fetchDeliveryOrders: (params?: Record<string, string>) => Promise<DeliveryOrder[]>
+  fetchDeliveryOrders: (params?: Record<string | number, string | number>) => Promise<DeliveryOrder[]>
   updateDeliveryOrderStatus: (id: string, status: string) => Promise<DeliveryOrder | null>
   fetchCouriers: () => Promise<User[]>
 }
@@ -172,7 +173,9 @@ export function EdenMarketBackendProvider({
         headers: { Authorization: `Bearer ${jwt}` },
       });
       // Filtrar por rol 'courier' (o 'cadete' si así lo llamas en el backend)
-      return res.data.filter((u: User) => u.role === 'courier' || u.role === 'cadete');
+      return res.data.filter((u: User) =>
+        ['courier', 'cadete'].includes(String(u.role))
+      );
     } catch (error) {
       console.log('Error fetching couriers:', error);
       return [];
@@ -228,11 +231,16 @@ export function EdenMarketBackendProvider({
   };
 
   // Listar pedidos de envío (puede filtrar por cashier, courier, estado, etc)
-  const fetchDeliveryOrders = async (params?: Record<string, string>): Promise<DeliveryOrder[]> => {
+  const fetchDeliveryOrders = async (params?: Record<string | number, string | number>): Promise<DeliveryOrder[]> => {
     try {
       let url = `${EDEN_MARKET_BACKEND_URL}/delivery-order`;
       if (params) {
-        const query = new URLSearchParams(params).toString();
+        // Convert all params to string for URLSearchParams
+        const stringParams: Record<string, string> = {};
+        Object.entries(params).forEach(([key, value]) => {
+          stringParams[String(key)] = String(value);
+        });
+        const query = new URLSearchParams(stringParams).toString();
         url += `?${query}`;
       }
       const res = await axios.get(url, {
@@ -742,7 +750,7 @@ export function EdenMarketBackendProvider({
         headers: { Authorization: `Bearer ${jwt}` },
       });
       // Filtrar por rol 'courier' (o 'cadete' si así lo llamas en el backend)
-      return res.data.filter((u: User) => u.role === 'courier' || u.role === 'cadete');
+      return res.data.filter((u: User) => ['courier', 'cadete'].includes(String(u.role)));
     } catch (error) {
       console.log('Error fetching couriers:', error);
       return [];
@@ -800,18 +808,7 @@ export function useEdenMarketBackend() {
 
 /**
  * Tipos exportados para uso en componentes
+ *
+ * Local duplicate type declarations for Product and User were removed because these
+ * types are already imported from '@/utils/constants/common'.
  */
-
-export type Product = {
-  id: string;
-  name: string;
-  price: number;
-  // Agrega otros campos según tu modelo
-};
-
-export type User = {
-  id: string;
-  username: string;
-  role: string;
-  // Agrega otros campos según tu modelo
-};

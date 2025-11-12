@@ -1,11 +1,11 @@
 import React from 'react';
-import AssignedDeliveryList from './delivery/AssignedDeliveryList';
+import CourierOrders from './CourierOrders';
 
 const CourierIndex: React.FC = () => {
   return (
     <div>
       <h1>Pedidos asignados</h1>
-      <AssignedDeliveryList />
+      <CourierOrders />
     </div>
   );
 };

@@ -1,8 +1,13 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { useEdenMarketBackend, DeliveryOrderItem, Product, User } from '@/contexts/backend';
+import { useEdenMarketBackend, DeliveryOrderItem } from '@/contexts/backend';
 import { Branch } from '@/utils/constants/common';
 
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+}
 
 const CreateDeliveryOrderForm: React.FC = () => {
   const { createDeliveryOrder, user, fetchProducts, fetchCouriers, fetchBranches } = useEdenMarketBackend();
@@ -11,7 +16,7 @@ const CreateDeliveryOrderForm: React.FC = () => {
   const [courierId, setCourierId] = useState('');
   const [items, setItems] = useState<DeliveryOrderItem[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [couriers, setCouriers] = useState<User[]>([]);
+  const [couriers, setCouriers] = useState<{ id: string | number; username: string }[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [branchId, setBranchId] = useState('');
   const [success, setSuccess] = useState(false);
@@ -60,11 +65,12 @@ const CreateDeliveryOrderForm: React.FC = () => {
         unitPrice: product ? product.price : 0,
       };
     });
+    console.log('Valor de courierId seleccionado:', courierId);
     const dto = {
       address,
       deliveryTime: getDeliveryTimeISO(),
-      cashierId: user.id,
-      courierId,
+  cashierId: String(user.id), // Asegura que sea string
+  cadeteId: Number(courierId),
       branchId,
       items: itemsWithPrice,
     };
