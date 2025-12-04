@@ -25,7 +25,7 @@ const DeliveryOrderList: React.FC = () => {
       <ul>
         {orders.map(order => (
           <li key={order.id}>
-            {order.address} - {order.status} - {order.deliveryTime}
+            {order.customerName} - {order.address} - {order.status} - {order.deliveryTime}
           </li>
         ))}
       </ul>
