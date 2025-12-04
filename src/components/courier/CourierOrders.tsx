@@ -3,7 +3,8 @@
 
 import { useEdenMarketBackend } from "@/contexts/backend"
 import type { DeliveryOrder } from "@/contexts/backend"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
+import { useDeliveryNotifications, useNotificationPermission } from "@/hooks/useDeliveryNotifications"
 
 const CourierOrders = () => {
 
@@ -11,6 +12,24 @@ const CourierOrders = () => {
   const [orders, setOrders] = useState<DeliveryOrder[]>([])
   const [message, setMessage] = useState<string>("")
   const [tab, setTab] = useState<'pendientes' | 'finalizados'>("pendientes")
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 5
+
+  // Solicitar permisos de notificación
+  useNotificationPermission();
+
+  // Conectar a WebSocket y escuchar nuevos pedidos
+  const handleNewOrder = useCallback((newOrder: any) => {
+    // Recargar la lista de pedidos cuando llega uno nuevo
+    if (user) {
+      fetchDeliveryOrders({ cadeteId: Number(user.id) }).then((data: DeliveryOrder[]) => setOrders(data));
+    }
+    // Mostrar mensaje de éxito
+    setMessage("¡Nuevo pedido asignado!");
+    setTimeout(() => setMessage(""), 3000);
+  }, [user, fetchDeliveryOrders]);
+
+  useDeliveryNotifications(handleNewOrder);
 
   // Cargar productos si no están cargados
   useEffect(() => {
@@ -36,7 +55,31 @@ const CourierOrders = () => {
 
   // Separar pedidos por estado
   const pendientes = orders.filter((o) => o.status === 'pending')
-  const finalizados = orders.filter((o) => o.status === 'delivered' || o.status === 'cancelled')
+
+  // Filtrar finalizados solo del día actual
+  const today = new Date()
+  today.setHours(0, 0, 0, 0) // Inicio del día
+
+  const finalizados = orders.filter((o) => {
+    if (o.status !== 'delivered' && o.status !== 'cancelled') return false
+
+    const orderDate = new Date(o.deliveryTime)
+    orderDate.setHours(0, 0, 0, 0)
+
+    return orderDate.getTime() === today.getTime()
+  })
+
+  // Paginación para finalizados
+  const totalPages = Math.ceil(finalizados.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const paginatedFinalizados = finalizados.slice(startIndex, endIndex)
+
+  // Resetear página cuando cambia el tab
+  const handleTabChange = (newTab: 'pendientes' | 'finalizados') => {
+    setTab(newTab)
+    setCurrentPage(1)
+  }
 
   // Helper para mostrar nombre del producto (ahora viene directo en el objeto)
   const getProductName = (item: any) => {
@@ -57,13 +100,13 @@ const CourierOrders = () => {
       <div className="flex gap-2 mb-6">
         <button
           className={`px-4 py-2 rounded-t-lg font-bold border-b-2 transition-all duration-200 ${tab === 'pendientes' ? 'border-[#0aa65d] bg-[#C1E3A4] text-[#273C1F]' : 'border-transparent bg-transparent text-[#598C30]'}`}
-          onClick={() => setTab('pendientes')}
+          onClick={() => handleTabChange('pendientes')}
         >
           Pendientes
         </button>
         <button
           className={`px-4 py-2 rounded-t-lg font-bold border-b-2 transition-all duration-200 ${tab === 'finalizados' ? 'border-[#B0855F] bg-[#F4E7DE] text-[#6A442C]' : 'border-transparent bg-transparent text-[#B0855F]'}`}
-          onClick={() => setTab('finalizados')}
+          onClick={() => handleTabChange('finalizados')}
         >
           Completados/Cancelados
         </button>
@@ -91,7 +134,7 @@ const CourierOrders = () => {
       )}
 
       <div className="space-y-4">
-        {(tab === 'pendientes' ? pendientes : finalizados).map((order: DeliveryOrder) => (
+        {(tab === 'pendientes' ? pendientes : paginatedFinalizados).map((order: DeliveryOrder) => (
           <div
             key={order.id}
             className={`bg-white rounded-xl border-2 ${tab === 'pendientes' ? 'border-[#598C30] hover:border-[#0aa65d]' : 'border-[#B0855F] hover:border-[#6A442C]'} p-5 shadow-md hover:shadow-lg transition-all duration-300 ${tab === 'pendientes' ? 'hover:shadow-[#0aa65d]/20' : 'hover:shadow-[#B0855F]/20'}`}
@@ -101,7 +144,9 @@ const CourierOrders = () => {
               <div className="flex items-start gap-3">
                 <span className="text-xl">📍</span>
                 <div>
-                  <p className="text-sm font-semibold text-[#598C30]">Dirección</p>
+                  <p className="text-sm font-semibold text-[#598C30]">Cliente</p>
+                  <p className="font-bold text-[#273C1F]">{order.customerName || 'Cliente'}</p>
+                  <p className="text-sm font-semibold text-[#598C30] mt-1">Dirección</p>
                   <p className="font-bold text-[#273C1F]">{order.address}</p>
                 </div>
               </div>
@@ -160,6 +205,37 @@ const CourierOrders = () => {
           </div>
         ))}
       </div>
+
+      {/* Paginación solo para finalizados */}
+      {tab === 'finalizados' && totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-center gap-4">
+          <button
+            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+            disabled={currentPage === 1}
+            className={`px-4 py-2 rounded-lg font-bold transition-all duration-200 border-2 ${currentPage === 1
+                ? 'bg-gray-200 text-gray-400 border-gray-300 cursor-not-allowed'
+                : 'bg-[#F4E7DE] text-[#6A442C] border-[#B0855F] hover:bg-[#B0855F] hover:text-white'
+              }`}
+          >
+            ← Anterior
+          </button>
+
+          <span className="text-[#273C1F] font-bold">
+            Página {currentPage} de {totalPages}
+          </span>
+
+          <button
+            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+            disabled={currentPage === totalPages}
+            className={`px-4 py-2 rounded-lg font-bold transition-all duration-200 border-2 ${currentPage === totalPages
+                ? 'bg-gray-200 text-gray-400 border-gray-300 cursor-not-allowed'
+                : 'bg-[#F4E7DE] text-[#6A442C] border-[#B0855F] hover:bg-[#B0855F] hover:text-white'
+              }`}
+          >
+            Siguiente →
+          </button>
+        </div>
+      )}
     </div>
   )
 }

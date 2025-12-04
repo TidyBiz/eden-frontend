@@ -16,6 +16,7 @@ const DeliveryOrderDetail: React.FC<Props> = ({ order }) => {
   return (
     <div>
       <h2>Detalle del pedido</h2>
+      <p>Cliente: {order.customerName}</p>
       <p>Dirección: {order.address}</p>
       <p>Estado: {order.status}</p>
       <button onClick={handleMarkDelivered} disabled={order.status === 'delivered'}>

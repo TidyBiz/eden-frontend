@@ -49,6 +49,7 @@ export type DeliveryOrderItem = {
 
 export type CreateDeliveryOrderDto = {
   address: string;
+  customerName: string;
   deliveryTime: string;
   cashierId: string;
   cadeteId?: number;
@@ -59,6 +60,7 @@ export type CreateDeliveryOrderDto = {
 export type DeliveryOrder = {
   id: string;
   address: string;
+  customerName: string;
   deliveryTime: string;
   status: string;
   cashierId: string;
@@ -226,7 +228,13 @@ export function EdenMarketBackendProvider({
       return res.data;
     } catch (error) {
       console.log('Error creando pedido de envío:', error);
-      return null;
+
+      // Si es un error de axios, extraer el mensaje
+      if (axios.isAxiosError(error) && error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
+
+      throw error;
     }
   };
 
@@ -791,8 +799,8 @@ export function EdenMarketBackendProvider({
     // Delivery order methods
     createDeliveryOrder,
     fetchDeliveryOrders,
-  updateDeliveryOrderStatus,
-  fetchCouriers,
+    updateDeliveryOrderStatus,
+    fetchCouriers,
   }
 
   return (
