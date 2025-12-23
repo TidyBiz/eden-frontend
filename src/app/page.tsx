@@ -17,6 +17,10 @@ import CashierInterface from "@/components/cashier"
 import ConfirmPurchaseModal from "@/components/modals/create-transaction"
 import ClearCartModal from "@/components/modals/create-transaction/clear-cart"
 import DebtorsModal from "@/components/modals/debtors"
+import UsersModal from "@/components/modals/users"
+import CourierIndex from "@/components/courier";
+import OpenRegisterModal from "@/components/modals/open-register";
+import CloseRegisterModal from "@/components/modals/close-register";
 
 // ** Utils & Types
 import { createCartHandlers } from "@/utils/lib/cart"
@@ -38,10 +42,6 @@ interface CartProduct extends Product {
   weight: number
 }
 
-// User type is imported from "@/utils/constants/common"
-
-import CourierIndex from "@/components/courier";
-
 export default function HomePage() {
   const [cart, setCart] = useState<CartProduct[]>([])
   const [scannedCode, setScannedCode] = useState("")
@@ -56,14 +56,50 @@ export default function HomePage() {
   const inputRef = useRef<HTMLInputElement>(null)
   const [showDeliveryForm, setShowDeliveryForm] = useState(false)
   const [showDebtorsModal, setShowDebtorsModal] = useState(false)
+  const [showUsersModal, setShowUsersModal] = useState(false)
 
-  const { user, isAuthenticated, isInitialized, login, logout, fetchProductByBarcode, createTransaction } =
-    useEdenMarketBackend()
+  // Cash Register States
+  const [showOpenRegisterModal, setShowOpenRegisterModal] = useState(false);
+  const [showCloseRegisterModal, setShowCloseRegisterModal] = useState(false);
+  const [closeRegisterStats, setCloseRegisterStats] = useState<any>(null);
+  const [isRegisterLoading, setIsRegisterLoading] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(false);
+
+  const {
+    user,
+    isAuthenticated,
+    isInitialized,
+    login,
+    logout,
+    fetchProductByBarcode,
+    createTransaction,
+    checkActiveSession,
+    openSession,
+    closeSession,
+    getSessionStats
+  } = useEdenMarketBackend()
+
+  // Check active session when user is authenticated and is a cashier
+  useEffect(() => {
+    const checkSession = async () => {
+      if (isAuthenticated && user?.role === 'cashier' && !checkingSession) {
+        setCheckingSession(true);
+        const { hasActiveSession } = await checkActiveSession(String(user.id));
+        if (!hasActiveSession) {
+          setShowOpenRegisterModal(true);
+        }
+        setCheckingSession(false);
+      }
+    };
+
+    if (isAuthenticated && user?.role === 'cashier') {
+      checkSession();
+    }
+  }, [isAuthenticated, user]);
 
   // Scanner focus logic
-  // Evitar focus automático si hay un modal de pedido abierto
   const focusScanner = useCallback(() => {
-    if (showLoginModal || showConfirmModal || showClearCartModal || showDebtorsModal) return;
+    if (showLoginModal || showConfirmModal || showClearCartModal || showDebtorsModal || showUsersModal || showOpenRegisterModal || showCloseRegisterModal) return;
     if (inputRef.current && !inputRef.current.disabled) {
       setTimeout(() => {
         if (inputRef.current && !showLoginModal && !showConfirmModal && !showClearCartModal) {
@@ -71,7 +107,7 @@ export default function HomePage() {
         }
       }, 10);
     }
-  }, [showLoginModal, showConfirmModal, showClearCartModal, showDebtorsModal]);
+  }, [showLoginModal, showConfirmModal, showClearCartModal, showDebtorsModal, showUsersModal, showOpenRegisterModal, showCloseRegisterModal]);
 
   useEffect(() => {
     const newTotal = cart.reduce(
@@ -82,8 +118,7 @@ export default function HomePage() {
   }, [cart])
 
   useEffect(() => {
-    // Si hay algún modal abierto, o el formulario de pedido está abierto, no registrar eventos ni intervalos de focus
-    if (showLoginModal || showConfirmModal || showClearCartModal || showDeliveryForm || showDebtorsModal) return;
+    if (showLoginModal || showConfirmModal || showClearCartModal || showDeliveryForm || showDebtorsModal || showUsersModal || showOpenRegisterModal || showCloseRegisterModal) return;
     focusScanner();
     const events = ["click", "blur", "focusout", "mousedown", "keydown"];
     events.forEach((event) => {
@@ -110,7 +145,7 @@ export default function HomePage() {
       window.removeEventListener("focus", focusScanner);
       clearInterval(intervalId);
     };
-  }, [focusScanner, showLoginModal, showConfirmModal, showClearCartModal, showDeliveryForm, showDebtorsModal]);
+  }, [focusScanner, showLoginModal, showConfirmModal, showClearCartModal, showDeliveryForm, showDebtorsModal, showUsersModal, showOpenRegisterModal, showCloseRegisterModal]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -160,6 +195,58 @@ export default function HomePage() {
     }
   }
 
+  // Cash Register Handlers
+  const handleOpenRegister = async (initialCash: number) => {
+    if (!user) return;
+
+    if (!user.branchId) {
+      alert("Error: El usuario no tiene una sucursal asignada. Contacte al administrador.");
+      return;
+    }
+
+    setIsRegisterLoading(true);
+    try {
+      await openSession(String(user.id), user.branchId, initialCash);
+      setShowOpenRegisterModal(false);
+    } catch (error) {
+      console.error("Error opening register:", error);
+      alert("Error al abrir la caja. Intente nuevamente.");
+    } finally {
+      setIsRegisterLoading(false);
+    }
+  };
+
+  const handleOpenCloseRegisterModal = async () => {
+    if (!user) return;
+    setIsRegisterLoading(true);
+    try {
+      const stats = await getSessionStats(String(user.id));
+      setCloseRegisterStats(stats?.totals || null);
+      setShowCloseRegisterModal(true);
+      setShowUserMenu(false);
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+    } finally {
+      setIsRegisterLoading(false);
+    }
+  };
+
+  const handleConfirmCloseRegister = async (finalCash: number) => {
+    if (!user) return;
+    setIsRegisterLoading(true);
+    try {
+      await closeSession(String(user.id), finalCash);
+      setShowCloseRegisterModal(false);
+      logout();
+      alert("Caja cerrada separada correctamente.");
+    } catch (error) {
+      console.error("Error closing register:", error);
+      alert("Error al cerrar la caja. Intente nuevamente.");
+    } finally {
+      setIsRegisterLoading(false);
+    }
+  };
+
   // Login logic
   const handleLogin = async (username: string, password: string) => {
     setIsLoginLoading(true)
@@ -206,6 +293,11 @@ export default function HomePage() {
     setShowUserMenu(false)
   }
 
+  const openUsersModal = () => {
+    setShowUsersModal(true)
+    setShowUserMenu(false)
+  }
+
   const WelcomeScreen = () => {
     const [username, setUsername] = useState("")
     const [password, setPassword] = useState("")
@@ -219,7 +311,7 @@ export default function HomePage() {
 
     return (
       <div className="fixed inset-0 flex">
-        {/* Left side - Brand imagery with leaf pattern */}
+        {/* Left side */}
         <div
           className="hidden md:flex md:w-1/2 bg-[#273C1F] relative overflow-hidden"
           style={{
@@ -228,7 +320,6 @@ export default function HomePage() {
             backgroundSize: "153px",
           }}
         >
-          {/* Tagline positioned at bottom left */}
           <div className="absolute bottom-18 bg-[#273C1F] left-1/2 -translate-x-1/2 z-10 text-center rounded-xl">
             <h2
               className="text-6xl font-bold text-[#a2d45e] tracking-wide whitespace-nowrap"
@@ -242,7 +333,6 @@ export default function HomePage() {
         {/* Right side - Login form */}
         <div className="w-full md:w-1/2 bg-[#F4F1EA] flex items-center justify-center p-8">
           <div className="w-full max-w-md space-y-8">
-            {/* Logo and brand */}
             <div className="text-center space-y-3">
               <div className="flex justify-center mb-4">
                 <img src="/logo.svg" alt="Edén" className="h-24 w-auto" />
@@ -250,60 +340,25 @@ export default function HomePage() {
               <p className="text-sm tracking-[0.3em] text-gray-600 uppercase font-light">Verdulerías</p>
             </div>
 
-            {/* Login form */}
             <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Username input */}
               <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#598C30]">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                    />
-                  </svg>
-                </div>
                 <input
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 bg-white border-2 border-[#598C30] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#598C30] focus:border-transparent text-gray-700 placeholder-gray-400 transition-all"
+                  className="w-full pl-4 pr-4 py-4 bg-white border-2 border-[#598C30] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#598C30] focus:border-transparent text-gray-700 placeholder-gray-400 transition-all text-center"
                   placeholder="Usuario"
                   disabled={isLoginLoading}
                   required
                 />
               </div>
 
-              {/* Password input */}
               <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#598C30]">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                    />
-                  </svg>
-                </div>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 bg-white border-2 border-[#598C30] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#598C30] focus:border-transparent text-gray-700 placeholder-gray-400 transition-all"
+                  className="w-full pl-4 pr-4 py-4 bg-white border-2 border-[#598C30] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#598C30] focus:border-transparent text-gray-700 placeholder-gray-400 transition-all text-center"
                   placeholder="Contraseña"
                   disabled={isLoginLoading}
                   required
@@ -316,7 +371,6 @@ export default function HomePage() {
                 </div>
               )}
 
-              {/* Submit button */}
               <button
                 type="submit"
                 disabled={isLoginLoading || !username.trim() || !password.trim()}
@@ -324,26 +378,6 @@ export default function HomePage() {
               >
                 {isLoginLoading ? (
                   <span className="flex items-center justify-center gap-2">
-                    <svg
-                      className="animate-spin h-5 w-5"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
                     Iniciando sesión...
                   </span>
                 ) : (
@@ -352,15 +386,7 @@ export default function HomePage() {
               </button>
             </form>
 
-            {/* Footer */}
             <div className="flex items-center justify-center gap-2 pt-4">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.07-.24C7.89 17.2 10.26 12.31 17 8z" fill="#598C30" />
-                <path
-                  d="M3.82 21.34C5.9 16.17 8 10 17 8c-1.45-1.75-3.2-3-5-3-3.31 0-6 2.69-6 6 0 2.97 2.16 5.43 5 5.91v2.03c-3.87-.48-7-3.85-7-7.94 0-4.42 3.58-8 8-8 2.53 0 4.77 1.17 6.24 3h.76l-1.06-1.06C16.38 2.56 14.27 2 12 2 6.48 2 2 6.48 2 12c0 4.84 3.46 8.87 8 9.8v-2.03c-3.87-.48-7-3.85-7-7.94 0-.62.08-1.21.21-1.79z"
-                  fill="#4E7526"
-                />
-              </svg>
               <p className="text-sm text-gray-600">© Edén Verdulerías</p>
             </div>
           </div>
@@ -385,7 +411,6 @@ export default function HomePage() {
   return (
     <div className={`${geistSans.className} ${chewy.className} min-h-screen bg-[#F4F1EA] p-4`}>
       <div className="max-w-4xl mx-auto">
-        {/* Header */}
         <Navbar
           isLoggedIn={isAuthenticated}
           user={user as User | null}
@@ -394,9 +419,10 @@ export default function HomePage() {
           toggleUserMenu={toggleUserMenu}
           showUserMenu={showUserMenu}
           openDebtorsModal={openDebtorsModal}
+          openUsersModal={openUsersModal}
+          onCloseRegister={handleOpenCloseRegisterModal}
         />
 
-        {/* Contenido condicional basado en el estado del usuario */}
         {!isAuthenticated ? (
           <WelcomeScreen />
         ) : String((user as User | null)?.role) === "admin" ? (
@@ -422,7 +448,6 @@ export default function HomePage() {
           />
         )}
 
-        {/* Modal de Login */}
         {showLoginModal && (
           <LoginModal
             handleLogin={handleLogin}
@@ -432,7 +457,6 @@ export default function HomePage() {
           />
         )}
 
-        {/* Modal de Confirmación de Compra */}
         {showConfirmModal && (
           <ConfirmPurchaseModal
             isOpen={showConfirmModal}
@@ -446,7 +470,6 @@ export default function HomePage() {
           />
         )}
 
-        {/* Modal de Vaciar Carrito */}
         {showClearCartModal && (
           <ClearCartModal
             isOpen={showClearCartModal}
@@ -455,8 +478,23 @@ export default function HomePage() {
           />
         )}
 
-        {/* Modal de Deudores */}
         <DebtorsModal isOpen={showDebtorsModal} onClose={() => setShowDebtorsModal(false)} />
+        <UsersModal isOpen={showUsersModal} onClose={() => setShowUsersModal(false)} />
+
+        <OpenRegisterModal
+          isOpen={showOpenRegisterModal}
+          onOpenRegister={handleOpenRegister}
+          isLoading={isRegisterLoading}
+          userBranch={user?.branch?.name || ''}
+        />
+
+        <CloseRegisterModal
+          isOpen={showCloseRegisterModal}
+          onClose={() => setShowCloseRegisterModal(false)}
+          onConfirmClose={handleConfirmCloseRegister}
+          stats={closeRegisterStats}
+          isLoading={isRegisterLoading}
+        />
       </div>
     </div>
   )

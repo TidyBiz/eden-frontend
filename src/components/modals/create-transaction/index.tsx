@@ -131,6 +131,11 @@ export default function ConfirmPurchaseModal({
   const executeTransaction = async () => {
     if (!user || !selectedPaymentMethod) return
 
+    if (!user.branchId) {
+      onError('El usuario no tiene una sucursal asignada')
+      return
+    }
+
     setIsLoading(true)
     try {
       const res = await createTransaction({
