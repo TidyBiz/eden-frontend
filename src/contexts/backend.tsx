@@ -26,6 +26,7 @@ import {
   Transaction,
   ProductForm,
   Stock,
+  ClientCredit,
 } from '@/utils/constants/common'
 
 /*************************************************
@@ -151,6 +152,8 @@ export type EdenMarketBackendValue = {
   fetchDeliveryOrders: (params?: Record<string | number, string | number>) => Promise<DeliveryOrder[]>
   updateDeliveryOrderStatus: (id: string, status: string) => Promise<DeliveryOrder | null>
   fetchCouriers: () => Promise<User[]>
+  fetchDebtors: () => Promise<ClientCredit[]>
+  settleDebt: (dni: string, paymentMethod: 'cash' | 'transfer', amount?: number) => Promise<any>
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -765,6 +768,36 @@ export function EdenMarketBackendProvider({
     }
   };
 
+  const fetchDebtors = async (): Promise<ClientCredit[]> => {
+    if (!jwt) return [];
+    try {
+      const res = await axios.get(`${EDEN_MARKET_BACKEND_URL}/transaction/list/debtors`, {
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
+      return res.data;
+    } catch (error) {
+      console.log('Error fetching debtors:', error);
+      return [];
+    }
+  };
+
+  const settleDebt = async (dni: string, paymentMethod: 'cash' | 'transfer', amount?: number) => {
+    if (!jwt) throw new Error('No authentication token');
+    try {
+      const res = await axios.post(
+        `${EDEN_MARKET_BACKEND_URL}/transaction/settle-debt`,
+        { dni, paymentMethod, amount },
+        {
+          headers: { Authorization: `Bearer ${jwt}` },
+        }
+      );
+      return res.data;
+    } catch (error) {
+      console.log('Error settling debt:', error);
+      throw error;
+    }
+  };
+
   const value: EdenMarketBackendValue = {
     user,
     products,
@@ -801,6 +834,8 @@ export function EdenMarketBackendProvider({
     fetchDeliveryOrders,
     updateDeliveryOrderStatus,
     fetchCouriers,
+    fetchDebtors,
+    settleDebt,
   }
 
   return (

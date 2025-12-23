@@ -16,6 +16,7 @@ export type CreateTransactionDto = {
   creditCustomer?: {
     id?: string
     name: string
+    dni: string
   }
 }
 
@@ -116,3 +117,11 @@ export const BRANCH_COLORS: BranchColor[] = [
     bgColor: 'bg-emerald-900/30',
   },
 ]
+
+export type ClientCredit = {
+  id: string
+  name: string
+  dni: string
+  amount: number
+  updatedAt: string
+}

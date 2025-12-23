@@ -16,6 +16,7 @@ import LoginModal from "@/components/modals/login"
 import CashierInterface from "@/components/cashier"
 import ConfirmPurchaseModal from "@/components/modals/create-transaction"
 import ClearCartModal from "@/components/modals/create-transaction/clear-cart"
+import DebtorsModal from "@/components/modals/debtors"
 
 // ** Utils & Types
 import { createCartHandlers } from "@/utils/lib/cart"
@@ -54,6 +55,7 @@ export default function HomePage() {
   const [isLoginLoading, setIsLoginLoading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const [showDeliveryForm, setShowDeliveryForm] = useState(false)
+  const [showDebtorsModal, setShowDebtorsModal] = useState(false)
 
   const { user, isAuthenticated, isInitialized, login, logout, fetchProductByBarcode, createTransaction } =
     useEdenMarketBackend()
@@ -61,7 +63,7 @@ export default function HomePage() {
   // Scanner focus logic
   // Evitar focus automático si hay un modal de pedido abierto
   const focusScanner = useCallback(() => {
-    if (showLoginModal || showConfirmModal || showClearCartModal) return;
+    if (showLoginModal || showConfirmModal || showClearCartModal || showDebtorsModal) return;
     if (inputRef.current && !inputRef.current.disabled) {
       setTimeout(() => {
         if (inputRef.current && !showLoginModal && !showConfirmModal && !showClearCartModal) {
@@ -69,7 +71,7 @@ export default function HomePage() {
         }
       }, 10);
     }
-  }, [showLoginModal, showConfirmModal, showClearCartModal]);
+  }, [showLoginModal, showConfirmModal, showClearCartModal, showDebtorsModal]);
 
   useEffect(() => {
     const newTotal = cart.reduce(
@@ -81,7 +83,7 @@ export default function HomePage() {
 
   useEffect(() => {
     // Si hay algún modal abierto, o el formulario de pedido está abierto, no registrar eventos ni intervalos de focus
-    if (showLoginModal || showConfirmModal || showClearCartModal || showDeliveryForm) return;
+    if (showLoginModal || showConfirmModal || showClearCartModal || showDeliveryForm || showDebtorsModal) return;
     focusScanner();
     const events = ["click", "blur", "focusout", "mousedown", "keydown"];
     events.forEach((event) => {
@@ -108,7 +110,7 @@ export default function HomePage() {
       window.removeEventListener("focus", focusScanner);
       clearInterval(intervalId);
     };
-  }, [focusScanner, showLoginModal, showConfirmModal, showClearCartModal, showDeliveryForm]);
+  }, [focusScanner, showLoginModal, showConfirmModal, showClearCartModal, showDeliveryForm, showDebtorsModal]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -199,6 +201,11 @@ export default function HomePage() {
     setShowUserMenu(!showUserMenu)
   }
 
+  const openDebtorsModal = () => {
+    setShowDebtorsModal(true)
+    setShowUserMenu(false)
+  }
+
   const WelcomeScreen = () => {
     const [username, setUsername] = useState("")
     const [password, setPassword] = useState("")
@@ -222,14 +229,14 @@ export default function HomePage() {
           }}
         >
           {/* Tagline positioned at bottom left */}
-            <div className="absolute bottom-18 bg-[#273C1F] left-1/2 -translate-x-1/2 z-10 text-center rounded-xl">
+          <div className="absolute bottom-18 bg-[#273C1F] left-1/2 -translate-x-1/2 z-10 text-center rounded-xl">
             <h2
               className="text-6xl font-bold text-[#a2d45e] tracking-wide whitespace-nowrap"
               style={{ fontFamily: "var(--font-chewy)" }}
             >
               Del campo a tu mesa
             </h2>
-            </div>
+          </div>
         </div>
 
         {/* Right side - Login form */}
@@ -386,6 +393,7 @@ export default function HomePage() {
           handleLogout={handleLogout}
           toggleUserMenu={toggleUserMenu}
           showUserMenu={showUserMenu}
+          openDebtorsModal={openDebtorsModal}
         />
 
         {/* Contenido condicional basado en el estado del usuario */}
@@ -446,6 +454,9 @@ export default function HomePage() {
             onConfirm={handleClearCartConfirm}
           />
         )}
+
+        {/* Modal de Deudores */}
+        <DebtorsModal isOpen={showDebtorsModal} onClose={() => setShowDebtorsModal(false)} />
       </div>
     </div>
   )
