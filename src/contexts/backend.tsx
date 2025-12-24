@@ -26,6 +26,7 @@ import {
   Transaction,
   ProductForm,
   Stock,
+  ClientCredit,
 } from '@/utils/constants/common'
 
 /*************************************************
@@ -112,6 +113,28 @@ export type StockAnalytics = {
   lowStockCount: number
 }
 
+// Cash register types
+export type CashRegisterSession = {
+  id: string;
+  initialCash: number;
+  finalCash?: number;
+  startTime: string;
+  endTime?: string;
+  status: 'open' | 'closed';
+}
+
+export type CashRegisterStats = {
+  session: CashRegisterSession;
+  totals: {
+    initialCash: number;
+    cashSales: number;
+    transferSales: number;
+    creditSales: number;
+    totalCashInBox: number;
+    totalSales: number;
+  }
+}
+
 export type EdenMarketBackendValue = {
   user: User | null
   products: Product[]
@@ -129,7 +152,7 @@ export type EdenMarketBackendValue = {
   fetchBranches: () => Promise<Branch[]>
   createUser: (body: CreateUserDto) => Promise<User | undefined>
   createProduct: (body: CreateProductDto) => Promise<Product | null>
-  updateUser: (body: UpdateUserDto) => Promise<User | null>
+  updateUser: (id: number | string, body: UpdateUserDto) => Promise<User | null>
   fetchTransactions: () => Promise<Transaction[]>
   createTransaction: (body: CreateTransactionDto) => Promise<Transaction | null>
   fetchRevenuePerBranch: () => Promise<RevenuePerBranch[]>
@@ -146,11 +169,20 @@ export type EdenMarketBackendValue = {
     branchId: string,
     quantity: number
   ) => Promise<Stock | null>
+  fetchUsers: () => Promise<User[]>
+  deleteUser: (id: number) => Promise<boolean>
   // Delivery order methods
   createDeliveryOrder: (body: CreateDeliveryOrderDto) => Promise<DeliveryOrder | null>
   fetchDeliveryOrders: (params?: Record<string | number, string | number>) => Promise<DeliveryOrder[]>
   updateDeliveryOrderStatus: (id: string, status: string) => Promise<DeliveryOrder | null>
   fetchCouriers: () => Promise<User[]>
+  fetchDebtors: () => Promise<ClientCredit[]>
+  settleDebt: (dni: string, paymentMethod: 'cash' | 'transfer', amount?: number) => Promise<any>
+  // Cash Register
+  checkActiveSession: (userId: string) => Promise<{ hasActiveSession: boolean, session: CashRegisterSession | null }>
+  openSession: (userId: string, branchId: string, initialCash: number) => Promise<CashRegisterSession | null>
+  closeSession: (userId: string, finalCash: number) => Promise<CashRegisterSession | null>
+  getSessionStats: (userId: string) => Promise<CashRegisterStats | null>
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -355,11 +387,14 @@ export function EdenMarketBackendProvider({
   /**
    * Updates backend user data
    */
-  const updateUser = async (body: UpdateUserDto) => {
-    if (!user?.id) return null
+  /**
+   * Updates backend user data
+   */
+  const updateUser = async (id: number | string, body: UpdateUserDto) => {
+    if (!jwt) return null
     try {
-      const res = await axios.put(
-        `${EDEN_MARKET_BACKEND_URL}/user/${user.id}`,
+      const res = await axios.patch(
+        `${EDEN_MARKET_BACKEND_URL}/user/${id}`,
         body,
         {
           headers: {
@@ -765,6 +800,119 @@ export function EdenMarketBackendProvider({
     }
   };
 
+  const fetchUsers = async (): Promise<User[]> => {
+    if (!jwt) return [];
+    try {
+      const res = await axios.get(`${EDEN_MARKET_BACKEND_URL}/user`, {
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
+      return res.data;
+    } catch (error) {
+      console.log('Error fetching users:', error);
+      return [];
+    }
+  };
+
+  const deleteUser = async (id: number): Promise<boolean> => {
+    if (!jwt) return false;
+    try {
+      await axios.delete(`${EDEN_MARKET_BACKEND_URL}/user/${id}`, {
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
+      return true;
+    } catch (error) {
+      console.log('Error deleting user:', error);
+      return false;
+    }
+  };
+
+  const fetchDebtors = async (): Promise<ClientCredit[]> => {
+    if (!jwt) return [];
+    try {
+      const res = await axios.get(`${EDEN_MARKET_BACKEND_URL}/transaction/list/debtors`, {
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
+      return res.data;
+    } catch (error) {
+      console.log('Error fetching debtors:', error);
+      return [];
+    }
+  };
+
+  const settleDebt = async (dni: string, paymentMethod: 'cash' | 'transfer', amount?: number) => {
+    if (!jwt) throw new Error('No authentication token');
+    try {
+      const res = await axios.post(
+        `${EDEN_MARKET_BACKEND_URL}/transaction/settle-debt`,
+        { dni, paymentMethod, amount },
+        {
+          headers: { Authorization: `Bearer ${jwt}` },
+        }
+      );
+      return res.data;
+    } catch (error) {
+      console.log('Error settling debt:', error);
+      throw error;
+    }
+  };
+
+  // Cash Register Methods
+  const checkActiveSession = async (userId: string) => {
+    if (!jwt) return { hasActiveSession: false, session: null };
+    try {
+      const res = await axios.get(`${EDEN_MARKET_BACKEND_URL}/cash-register/active/${userId}`, {
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
+      return res.data;
+    } catch (error) {
+      console.log('Error checking active session:', error);
+      return { hasActiveSession: false, session: null };
+    }
+  };
+
+  const openSession = async (userId: string, branchId: string, initialCash: number): Promise<CashRegisterSession | null> => {
+    if (!jwt) return null;
+    try {
+      const res = await axios.post(
+        `${EDEN_MARKET_BACKEND_URL}/cash-register/open`,
+        { cashierId: userId, branchId, initialCash },
+        { headers: { Authorization: `Bearer ${jwt}` } }
+      );
+      return res.data;
+    } catch (error) {
+      console.log('Error opening session:', error);
+      throw error;
+    }
+  };
+
+  const closeSession = async (userId: string, finalCash: number): Promise<CashRegisterSession | null> => {
+    if (!jwt) return null;
+    try {
+      const res = await axios.post(
+        `${EDEN_MARKET_BACKEND_URL}/cash-register/close`,
+        { cashierId: userId, finalCash },
+        { headers: { Authorization: `Bearer ${jwt}` } }
+      );
+      return res.data;
+    } catch (error) {
+      console.log('Error closing session:', error);
+      throw error;
+    }
+  };
+
+  const getSessionStats = async (userId: string): Promise<CashRegisterStats | null> => {
+    if (!jwt) return null;
+    try {
+      const res = await axios.get(`${EDEN_MARKET_BACKEND_URL}/cash-register/status/${userId}`, {
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
+      return res.data;
+    } catch (error) {
+      console.log('Error getting session stats:', error);
+      return null;
+    }
+  };
+
   const value: EdenMarketBackendValue = {
     user,
     products,
@@ -801,6 +949,15 @@ export function EdenMarketBackendProvider({
     fetchDeliveryOrders,
     updateDeliveryOrderStatus,
     fetchCouriers,
+    fetchDebtors,
+    settleDebt,
+    // Cash Register Methods
+    checkActiveSession,
+    openSession,
+    closeSession,
+    getSessionStats,
+    fetchUsers,
+    deleteUser,
   }
 
   return (

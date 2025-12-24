@@ -1,5 +1,9 @@
 import React, { useRef, useEffect, useState } from 'react'
+import axios from 'axios'
 import { CartProduct } from '@/utils/lib/cart'
+import ConfirmationModal from '../confirmation'
+import { EDEN_MARKET_BACKEND_URL } from '@/utils/constants/api'
+import { safeLocalStorage } from '@/utils/lib/storage'
 import {
   User,
   CreateTransactionDto,
@@ -36,6 +40,9 @@ export default function ConfirmPurchaseModal({
     useState<PaymentMethod | null>(null)
   const [showCreditInput, setShowCreditInput] = useState(false)
   const [creditCustomerName, setCreditCustomerName] = useState('')
+  const [creditCustomerDni, setCreditCustomerDni] = useState('')
+  const [showConfirmation, setShowConfirmation] = useState(false)
+  const [clientDebt, setClientDebt] = useState<number>(0)
 
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
@@ -70,13 +77,62 @@ export default function ConfirmPurchaseModal({
     }
   }
 
-  const handleConfirmPurchase = async () => {
+  const handlePreConfirm = async () => {
     if (!user || !selectedPaymentMethod) {
       return
     }
 
-    if (selectedPaymentMethod === 'credit' && !creditCustomerName.trim()) {
-      onError('Por favor, complete los datos del cliente para venta a crédito')
+    if (selectedPaymentMethod === 'credit') {
+      if (!creditCustomerName.trim()) {
+        onError('Por favor, complete el nombre del cliente para venta a crédito')
+        return
+      }
+      if (!creditCustomerDni.trim()) {
+        onError('Por favor, complete el DNI del cliente para venta a crédito')
+        return
+      }
+
+      setIsLoading(true)
+      try {
+        const authData = safeLocalStorage.getJSON<{ jwt: string }>('auth')
+        const token = authData?.jwt
+        let debt = 0
+
+        if (token) {
+          try {
+            const res = await axios.get(
+              `${EDEN_MARKET_BACKEND_URL}/transaction/client-credit/${creditCustomerDni}`,
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              }
+            )
+            if (res.data) {
+              debt = res.data.amount || 0
+            }
+          } catch (error) {
+            // Ignore error if client not found (new client)
+            console.log('Client credit fetch error (likely new client):', error)
+          }
+        }
+
+        setClientDebt(debt)
+        setShowConfirmation(true)
+      } catch (error) {
+        console.error('Error in pre-confirmation:', error)
+        onError('Error al verificar crédito del cliente')
+      } finally {
+        setIsLoading(false)
+      }
+    } else {
+      executeTransaction()
+    }
+  }
+
+  const executeTransaction = async () => {
+    if (!user || !selectedPaymentMethod) return
+
+    if (!user.branchId) {
+      onError('El usuario no tiene una sucursal asignada')
       return
     }
 
@@ -93,6 +149,7 @@ export default function ConfirmPurchaseModal({
         ...(selectedPaymentMethod === 'credit' && {
           creditCustomer: {
             name: creditCustomerName,
+            dni: creditCustomerDni,
           },
         }),
       })
@@ -100,12 +157,15 @@ export default function ConfirmPurchaseModal({
       if (res && typeof res === 'object' && 'id' in res) {
         onSuccess()
         setIsOpen(false)
+        setShowConfirmation(false)
       } else if (typeof res === 'string') {
         onError(res)
         setIsOpen(false)
+        setShowConfirmation(false)
       } else {
         onError('Error al confirmar la compra')
         setIsOpen(false)
+        setShowConfirmation(false)
       }
     } catch (error) {
       console.error('Error creating transaction:', error)
@@ -113,6 +173,7 @@ export default function ConfirmPurchaseModal({
         error instanceof Error ? error.message : 'Error al confirmar la compra'
       )
       setIsOpen(false)
+      setShowConfirmation(false)
     } finally {
       setIsLoading(false)
     }
@@ -216,33 +277,30 @@ export default function ConfirmPurchaseModal({
             </h3>
             <div className="flex gap-2 flex-wrap">
               <button
-                className={`px-4 py-2 rounded-md border transition-colors ${
-                  selectedPaymentMethod === 'cash'
-                    ? 'bg-green-100 dark:bg-green-900 border-green-500 text-green-700 dark:text-green-300'
-                    : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                }`}
+                className={`px-4 py-2 rounded-md border transition-colors ${selectedPaymentMethod === 'cash'
+                  ? 'bg-green-100 dark:bg-green-900 border-green-500 text-green-700 dark:text-green-300'
+                  : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  }`}
                 onClick={() => handlePaymentMethodSelect('cash')}
                 disabled={isLoading}
               >
                 Efectivo
               </button>
               <button
-                className={`px-4 py-2 rounded-md border transition-colors ${
-                  selectedPaymentMethod === 'transfer'
-                    ? 'bg-blue-100 dark:bg-blue-900 border-blue-500 text-blue-700 dark:text-blue-300'
-                    : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                }`}
+                className={`px-4 py-2 rounded-md border transition-colors ${selectedPaymentMethod === 'transfer'
+                  ? 'bg-blue-100 dark:bg-blue-900 border-blue-500 text-blue-700 dark:text-blue-300'
+                  : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  }`}
                 onClick={() => handlePaymentMethodSelect('transfer')}
                 disabled={isLoading}
               >
                 Transferencia
               </button>
               <button
-                className={`px-4 py-2 rounded-md border transition-colors ${
-                  selectedPaymentMethod === 'credit'
-                    ? 'bg-orange-100 dark:bg-orange-900 border-orange-500 text-orange-700 dark:text-orange-300'
-                    : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                }`}
+                className={`px-4 py-2 rounded-md border transition-colors ${selectedPaymentMethod === 'credit'
+                  ? 'bg-orange-100 dark:bg-orange-900 border-orange-500 text-orange-700 dark:text-orange-300'
+                  : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  }`}
                 onClick={() => handlePaymentMethodSelect('credit')}
                 disabled={isLoading}
               >
@@ -265,8 +323,21 @@ export default function ConfirmPurchaseModal({
                       type="text"
                       value={creditCustomerName}
                       onChange={(e) => setCreditCustomerName(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-gray-100"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-gray-100 text-gray-700 dark:text-gray-100"
                       placeholder="Ingrese el nombre del cliente"
+                      disabled={isLoading}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      DNI del Cliente:
+                    </label>
+                    <input
+                      type="text"
+                      value={creditCustomerDni}
+                      onChange={(e) => setCreditCustomerDni(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-gray-100 text-gray-700 dark:text-gray-100"
+                      placeholder="Ingrese el DNI del cliente"
                       disabled={isLoading}
                     />
                   </div>
@@ -286,7 +357,7 @@ export default function ConfirmPurchaseModal({
           </button>
           <button
             className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-            onClick={handleConfirmPurchase}
+            onClick={handlePreConfirm}
             disabled={isLoading || !selectedPaymentMethod}
           >
             {isLoading ? (
@@ -319,6 +390,36 @@ export default function ConfirmPurchaseModal({
           </button>
         </div>
       </div>
+
+      <ConfirmationModal
+        isOpen={showConfirmation}
+        onClose={() => setShowConfirmation(false)}
+        onConfirm={executeTransaction}
+        title="Confirmar Fiado"
+        message={
+          <div className="space-y-2">
+            <p>
+              ¿Está seguro de confirmar el fiado a{' '}
+              <span className="font-semibold">{creditCustomerName}</span>?
+            </p>
+            <div className="bg-orange-50 dark:bg-orange-900/20 p-3 rounded-lg border border-orange-200 dark:border-orange-800">
+              <p className="text-sm text-gray-600 dark:text-gray-400">Deuda actual:</p>
+              <p className="text-xl font-bold text-orange-700 dark:text-orange-300">
+                ${clientDebt.toFixed(2)}
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                Nueva deuda será:
+              </p>
+              <p className="text-xl font-bold text-red-600 dark:text-red-400">
+                ${(clientDebt + total).toFixed(2)}
+              </p>
+            </div>
+          </div>
+        }
+        confirmText="Confirmar Fiado"
+        isLoading={isLoading}
+        type="warning"
+      />
     </div>
   )
 }

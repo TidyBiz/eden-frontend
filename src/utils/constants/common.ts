@@ -1,11 +1,24 @@
 export type CreateUserDto = {
   username: string
+  password?: string
   role: EdenUserRoles
+  branchId: string
 }
 
 export type UpdateUserDto = {
-  username: string
-  role: EdenUserRoles
+  username?: string
+  password?: string
+  role?: EdenUserRoles
+  branchId?: string
+}
+
+// User role type needs to be flexible enough for our application
+export enum UserRole {
+  ADMIN = 'admin',
+  USER = 'user',
+  CASHIER = 'cashier',
+  COURIER = 'courier',
+  STOCK_MANAGER = 'stock_manager'
 }
 
 export type CreateTransactionDto = {
@@ -16,6 +29,7 @@ export type CreateTransactionDto = {
   creditCustomer?: {
     id?: string
     name: string
+    dni: string
   }
 }
 
@@ -25,13 +39,14 @@ export type CreateTransactionItemDto = {
   discount?: number
 }
 
-export type EdenUserRoles = 'admin' | 'user'
+export type EdenUserRoles = 'admin' | 'user' | 'cashier' | 'courier' | 'stock_manager'
 
 export type User = {
-  id: string
+  id: number
   username: string
   role: EdenUserRoles
-  branchId: string
+  branchId?: string
+  branch?: Branch
 }
 
 export type Product = {
@@ -116,3 +131,11 @@ export const BRANCH_COLORS: BranchColor[] = [
     bgColor: 'bg-emerald-900/30',
   },
 ]
+
+export type ClientCredit = {
+  id: string
+  name: string
+  dni: string
+  amount: number
+  updatedAt: string
+}
