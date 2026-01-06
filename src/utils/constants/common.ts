@@ -58,6 +58,7 @@ export type Product = {
   isSoldByWeight: boolean
   description: string
   isActive: boolean
+  reorderPoint: number
   stock: Stock[]
 }
 
@@ -71,6 +72,7 @@ export type ProductForm = {
   description: string
   isActive: boolean
   stockNumber: number
+  reorderPoint: number
 }
 
 export type Branch = {

@@ -135,6 +135,49 @@ export type CashRegisterStats = {
   }
 }
 
+// Stock Transfer Types
+export type StockTransferItem = {
+  id?: string;
+  productId: string;
+  product?: Product;
+  quantity: number;
+  note?: string;
+};
+
+export enum StockTransferStatus {
+  PENDING = 'pending',
+  SHIPPED = 'shipped',
+  RECEIVED = 'received',
+  CANCELLED = 'cancelled',
+}
+
+export type StockTransfer = {
+  id: string;
+  remitoNumber: string;
+  originBranch: Branch;
+  destinationBranch: Branch;
+  createdBy: User;
+  receivedBy?: User;
+  status: StockTransferStatus;
+  items: StockTransferItem[];
+  observations?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CreateStockTransferDto = {
+  remitoNumber: string;
+  originBranchId: string;
+  destinationBranchId: string;
+  createdById: number;
+  items: {
+    productId: string;
+    quantity: number;
+    note?: string;
+  }[];
+  observations?: string;
+};
+
 export type EdenMarketBackendValue = {
   user: User | null
   products: Product[]
@@ -152,6 +195,8 @@ export type EdenMarketBackendValue = {
   fetchBranches: () => Promise<Branch[]>
   createUser: (body: CreateUserDto) => Promise<User | undefined>
   createProduct: (body: CreateProductDto) => Promise<Product | null>
+  updateProduct: (id: string, body: Partial<Product>) => Promise<Product | null>
+  deleteProduct: (id: string) => Promise<boolean>
   updateUser: (id: number | string, body: UpdateUserDto) => Promise<User | null>
   fetchTransactions: () => Promise<Transaction[]>
   createTransaction: (body: CreateTransactionDto) => Promise<Transaction | null>
@@ -183,6 +228,11 @@ export type EdenMarketBackendValue = {
   openSession: (userId: string, branchId: string, initialCash: number) => Promise<CashRegisterSession | null>
   closeSession: (userId: string, finalCash: number) => Promise<CashRegisterSession | null>
   getSessionStats: (userId: string) => Promise<CashRegisterStats | null>
+  // Stock Transfer Methods
+  fetchStockTransfers: () => Promise<StockTransfer[]>
+  fetchStockTransferById: (id: string) => Promise<StockTransfer | null>
+  createStockTransfer: (body: CreateStockTransferDto) => Promise<StockTransfer | null>
+  confirmStockTransfer: (id: string, receivedById: number) => Promise<StockTransfer | null>
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -239,6 +289,24 @@ export function EdenMarketBackendProvider({
       setJwt(authData.jwt)
     }
     setIsInitialized(true)
+  }, [])
+
+  // Handle unauthorized errors globally
+  useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          console.log('Unauthorized request - Logging out...')
+          logout()
+        }
+        return Promise.reject(error)
+      }
+    )
+
+    return () => {
+      axios.interceptors.response.eject(interceptor)
+    }
   }, [])
 
   /*************************************************
@@ -462,6 +530,34 @@ export function EdenMarketBackendProvider({
     } catch (error) {
       console.log('Error creating product:', error)
       return null
+    }
+  }
+
+  const updateProduct = async (id: string, body: Partial<Product>) => {
+    try {
+      const res = await axios.patch(`${EDEN_MARKET_BACKEND_URL}/product/${id}`, body, {
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+        },
+      })
+      return res.data
+    } catch (error) {
+      console.log('Error updating product:', error)
+      return null
+    }
+  }
+
+  const deleteProduct = async (id: string) => {
+    try {
+      await axios.delete(`${EDEN_MARKET_BACKEND_URL}/product/${id}`, {
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+        },
+      })
+      return true
+    } catch (error) {
+      console.log('Error deleting product:', error)
+      return false
     }
   }
 
@@ -913,6 +1009,61 @@ export function EdenMarketBackendProvider({
     }
   };
 
+  // Stock Transfer Methods
+  const fetchStockTransfers = async (): Promise<StockTransfer[]> => {
+    if (!jwt) return [];
+    try {
+      const res = await axios.get(`${EDEN_MARKET_BACKEND_URL}/stock-transfer`, {
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
+      return res.data;
+    } catch (error) {
+      console.log('Error fetching stock transfers:', error);
+      return [];
+    }
+  };
+
+  const fetchStockTransferById = async (id: string): Promise<StockTransfer | null> => {
+    if (!jwt) return null;
+    try {
+      const res = await axios.get(`${EDEN_MARKET_BACKEND_URL}/stock-transfer/${id}`, {
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
+      return res.data;
+    } catch (error) {
+      console.log('Error fetching stock transfer by id:', error);
+      return null;
+    }
+  };
+
+  const createStockTransfer = async (body: CreateStockTransferDto): Promise<StockTransfer | null> => {
+    if (!jwt) return null;
+    try {
+      const res = await axios.post(`${EDEN_MARKET_BACKEND_URL}/stock-transfer`, body, {
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
+      return res.data;
+    } catch (error) {
+      console.log('Error creating stock transfer:', error);
+      return null;
+    }
+  };
+
+  const confirmStockTransfer = async (id: string, receivedById: number): Promise<StockTransfer | null> => {
+    if (!jwt) return null;
+    try {
+      const res = await axios.patch(
+        `${EDEN_MARKET_BACKEND_URL}/stock-transfer/${id}/confirm`,
+        { receivedById },
+        { headers: { Authorization: `Bearer ${jwt}` } }
+      );
+      return res.data;
+    } catch (error) {
+      console.log('Error confirming stock transfer:', error);
+      return null;
+    }
+  };
+
   const value: EdenMarketBackendValue = {
     user,
     products,
@@ -930,6 +1081,8 @@ export function EdenMarketBackendProvider({
     fetchBranches,
     createUser,
     createProduct,
+    updateProduct,
+    deleteProduct,
     updateUser,
     fetchTransactions,
     createTransaction,
@@ -958,6 +1111,11 @@ export function EdenMarketBackendProvider({
     getSessionStats,
     fetchUsers,
     deleteUser,
+    // Stock Transfer
+    fetchStockTransfers,
+    fetchStockTransferById,
+    createStockTransfer,
+    confirmStockTransfer,
   }
 
   return (
