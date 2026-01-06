@@ -7,6 +7,9 @@ import { useEffect, useState, useRef } from "react"
 // ** Components
 import AddProducts from "../modals/add-products"
 import AddStockModal from "../modals/add-stock"
+import EditProductModal from "../modals/edit-product"
+import LogisticsTab from "./sections/LogisticsTab"
+import MarketListTab from "./sections/MarketListTab"
 
 // ** Contexts
 import { useEdenMarketBackend, type BranchAnalytics, type StockAnalytics, type StockByBranch } from "@/contexts/backend"
@@ -19,8 +22,9 @@ interface AdminInterfaceProps {
 }
 
 const AdminInterface: React.FC<AdminInterfaceProps> = () => {
-  const [activeTab, setActiveTab] = useState<"overview" | "stock" | "stores">("overview")
+  const [activeTab, setActiveTab] = useState<"overview" | "stock" | "stores" | "logistics" | "market-list">("overview")
   const [isAddProductsOpen, setIsAddProductsOpen] = useState(false)
+  const [isEditProductOpen, setIsEditProductOpen] = useState(false)
   const [isAddStockOpen, setIsAddStockOpen] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
 
@@ -336,7 +340,7 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
                 <th className="text-right py-4 px-4 text-[#273C1F] font-bold">Precio</th>
                 <th className="text-right py-4 px-4 text-[#273C1F] font-bold">Stock Total</th>
                 <th className="text-center py-4 px-4 text-[#273C1F] font-bold">Estado</th>
-                <th className="text-center py-4 px-4 text-[#273C1F] font-bold">Añadir stock</th>
+                <th className="text-center py-4 px-4 text-[#273C1F] font-bold">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -360,25 +364,36 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
 
                       <td className="py-4 px-4 text-center">
                         <span
-                          className={`px-3 py-1.5 rounded-full text-xs font-bold ${
-                            isLowStock
-                              ? "bg-[#B0855F]/20 text-[#6A442C] border-2 border-[#B0855F]"
-                              : "bg-[#0aa65d]/20 text-[#273C1F] border-2 border-[#0aa65d]"
-                          }`}
+                          className={`px-3 py-1.5 rounded-full text-xs font-bold ${isLowStock
+                            ? "bg-[#B0855F]/20 text-[#6A442C] border-2 border-[#B0855F]"
+                            : "bg-[#0aa65d]/20 text-[#273C1F] border-2 border-[#0aa65d]"
+                            }`}
                         >
                           {isLowStock ? "Stock Bajo" : "Normal"}
                         </span>
                       </td>
                       <td className="py-4 px-4 text-center">
-                        <button
-                          onClick={() => {
-                            setSelectedProduct(product)
-                            setIsAddStockOpen(true)
-                          }}
-                          className="px-4 py-2 bg-[#598C30] text-white text-xs font-bold rounded-lg hover:bg-[#4E7526] transition-all duration-200 cursor-pointer border-2 border-[#273C1F] hover:shadow-lg hover:shadow-[#598C30]/30"
-                        >
-                          Añadir stock
-                        </button>
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => {
+                              setSelectedProduct(product)
+                              setIsEditProductOpen(true)
+                            }}
+                            className="p-2 bg-[#F4F1EA] text-[#598C30] rounded-lg border-2 border-[#598C30] hover:bg-[#598C30] hover:text-white transition-all duration-200 cursor-pointer"
+                            title="Editar Producto"
+                          >
+                            ⚙️
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedProduct(product)
+                              setIsAddStockOpen(true)
+                            }}
+                            className="px-4 py-2 bg-[#598C30] text-white text-xs font-bold rounded-lg hover:bg-[#4E7526] transition-all duration-200 cursor-pointer border-2 border-[#273C1F] hover:shadow-lg hover:shadow-[#598C30]/30"
+                          >
+                            + Stock
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   )
@@ -501,15 +516,13 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
                   return (
                     <tr
                       key={stock.id}
-                      className={`border-b border-[#C1E3A4] hover:bg-[#C1E3A4]/30 transition-colors ${
-                        isLowStock ? "bg-[#B0855F]/10" : ""
-                      }`}
+                      className={`border-b border-[#C1E3A4] hover:bg-[#C1E3A4]/30 transition-colors ${isLowStock ? "bg-[#B0855F]/10" : ""
+                        }`}
                     >
                       <td className="py-4 px-4">
                         <span
-                          className={`px-3 py-1.5 rounded-lg font-bold ${
-                            getBranchColor(stock.branch?.id || "").textColor
-                          } ${getBranchColor(stock.branch?.id || "").bgColor}`}
+                          className={`px-3 py-1.5 rounded-lg font-bold ${getBranchColor(stock.branch?.id || "").textColor
+                            } ${getBranchColor(stock.branch?.id || "").bgColor}`}
                         >
                           {stock.branch?.name || "Sucursal"}
                         </span>
@@ -528,11 +541,10 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
                       </td>
                       <td className="py-4 px-4 text-center">
                         <span
-                          className={`px-3 py-1.5 rounded-full text-xs font-bold ${
-                            isLowStock
-                              ? "bg-[#B0855F]/20 text-[#6A442C] border-2 border-[#B0855F]"
-                              : "bg-[#0aa65d]/20 text-[#273C1F] border-2 border-[#0aa65d]"
-                          }`}
+                          className={`px-3 py-1.5 rounded-full text-xs font-bold ${isLowStock
+                            ? "bg-[#B0855F]/20 text-[#6A442C] border-2 border-[#B0855F]"
+                            : "bg-[#0aa65d]/20 text-[#273C1F] border-2 border-[#0aa65d]"
+                            }`}
                         >
                           {isLowStock ? "Stock Bajo" : "Normal"}
                         </span>
@@ -601,16 +613,17 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
           {[
             { id: "overview", label: "📊 Resumen", icon: "📊" },
             { id: "stock", label: "📦 Stock", icon: "📦" },
+            { id: "market-list", label: "🛒 Market List", icon: "🛒" },
+            { id: "logistics", label: "🚚 Logística", icon: "🚚" },
             { id: "stores", label: "🏪 Sucursales", icon: "🏪" },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as "overview" | "stock" | "stores")}
-              className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-300 ${
-                activeTab === tab.id
-                  ? "bg-[#0aa65d] text-white shadow-lg shadow-[#0aa65d]/30 scale-[1.02]"
-                  : "text-[#598C30] hover:text-[#273C1F] hover:bg-[#C1E3A4]"
-              }`}
+              className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-300 ${activeTab === tab.id
+                ? "bg-[#0aa65d] text-white shadow-lg shadow-[#0aa65d]/30 scale-[1.02]"
+                : "text-[#598C30] hover:text-[#273C1F] hover:bg-[#C1E3A4]"
+                }`}
             >
               {tab.label}
             </button>
@@ -621,6 +634,8 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
         <div className="min-h-96">
           {activeTab === "overview" && <OverviewTab />}
           {activeTab === "stock" && <StockTab />}
+          {activeTab === "market-list" && <MarketListTab />}
+          {activeTab === "logistics" && <LogisticsTab />}
           {activeTab === "stores" && <StoresTab />}
         </div>
       </div>
@@ -631,6 +646,12 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
         setIsOpen={setIsAddStockOpen}
         product={selectedProduct}
         onStockAdded={handleProductCreated}
+      />
+      <EditProductModal
+        isOpen={isEditProductOpen}
+        setIsOpen={setIsEditProductOpen}
+        product={selectedProduct}
+        onProductUpdated={handleProductCreated}
       />
     </div>
     // </CHANGE>

@@ -39,6 +39,7 @@ function AddProducts({
     branchId: '',
     description: '',
     isActive: true,
+    reorderPoint: 10,
   })
 
   const { createProduct } = useEdenMarketBackend()
@@ -210,8 +211,11 @@ function AddProducts({
                     <th className="border border-gray-300 dark:border-gray-700 p-2">
                       Precio Alternativo
                     </th>
-                    <th className="border border-gray-300 dark:border-gray-700 p-2">
+                    <th className="border border-gray-300 dark:border-gray-700 p-2 text-xs">
                       Pesable
+                    </th>
+                    <th className="border border-gray-300 dark:border-gray-700 p-2 text-xs">
+                      Min. Stock
                     </th>
                   </tr>
                 </thead>
@@ -415,6 +419,28 @@ function AddProducts({
                           </option>
                         ))}
                       </select>
+                    </div>
+                  </div>
+                  <div className="flex gap-4">
+                    <div className="flex flex-col gap-2 w-full">
+                      <label
+                        htmlFor="reorderPoint"
+                        className="text-gray-600 dark:text-gray-400 font-bold"
+                      >
+                        Punto de Pedido (Stock Mínimo)
+                      </label>
+                      <input
+                        type="text"
+                        id="reorderPoint"
+                        className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-700 bg-yellow-50 dark:bg-yellow-900/10 font-bold"
+                        name="reorderPoint"
+                        value={formData.reorderPoint}
+                        onChange={(e) => handleChangeNumber(e)}
+                        placeholder="Ej: 10 (kg o unidades)"
+                      />
+                      <p className="text-[10px] text-gray-500">
+                        El sistema te avisará cuando el stock sea igual o menor a este valor.
+                      </p>
                     </div>
                   </div>
                 </div>
