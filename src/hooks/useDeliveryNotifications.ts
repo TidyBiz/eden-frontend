@@ -1,12 +1,18 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useEdenMarketBackend } from '@/contexts/backend';
 
 const SOCKET_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
 
-export function useDeliveryNotifications(onNewOrder?: (order: any) => void) {
+interface DeliveryOrder {
+    customerName: string;
+    address: string;
+    [key: string]: unknown;
+}
+
+export function useDeliveryNotifications(onNewOrder?: (order: DeliveryOrder) => void) {
     const { user } = useEdenMarketBackend();
     const socketRef = useRef<Socket | null>(null);
     const onNewOrderRef = useRef(onNewOrder);

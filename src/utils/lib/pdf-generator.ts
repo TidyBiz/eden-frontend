@@ -3,10 +3,9 @@ import autoTable from 'jspdf-autotable'
 import { StockTransfer } from '@/contexts/backend'
 
 // Logo dibujado con vectores internos de jsPDF para máxima compatibilidad y nitidez
-const drawLogo = (doc: jsPDF, x: number, y: number, scale: number = 1) => {
+const drawLogo = (doc: jsPDF, x: number, y: number) => {
     const lime = [175, 205, 92] // #AFCD5C
     const green = [89, 140, 48] // #598C30
-    const darkGreen = [39, 60, 31] // #273C1F
 
     // Dibujo simplificado de hoja/planta inspirado en el logo
     doc.setFillColor(lime[0], lime[1], lime[2])
@@ -103,10 +102,10 @@ export const generateRemitoPDF = (transfer: StockTransfer) => {
 
     // Tabla de Productos
     const tableData = transfer.items.map(item => [
-        { content: item.product?.PLU || 'N/A', styles: { halign: 'center', fontStyle: 'bold' } as any },
+        { content: item.product?.PLU || 'N/A', styles: { halign: 'center' as const, fontStyle: 'bold' as const } },
         item.product?.name.toUpperCase() || 'PRODUCTO DESCONOCIDO',
-        { content: item.quantity.toFixed(2), styles: { halign: 'center', fontStyle: 'bold' } as any },
-        { content: item.product?.isSoldByWeight ? 'KG' : 'UNID.', styles: { halign: 'center' } as any },
+        { content: item.quantity.toFixed(2), styles: { halign: 'center' as const, fontStyle: 'bold' as const } },
+        { content: item.product?.isSoldByWeight ? 'KG' : 'UNID.', styles: { halign: 'center' as const } },
         item.note || '-'
     ])
 
@@ -142,6 +141,7 @@ export const generateRemitoPDF = (transfer: StockTransfer) => {
     })
 
     // Observaciones Generales
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const finalTableY = (doc as any).lastAutoTable.finalY || 150
     if (transfer.observations) {
         doc.setFont('helvetica', 'bold')
