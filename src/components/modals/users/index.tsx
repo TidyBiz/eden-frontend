@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react'
-import { User, CreateUserDto, UpdateUserDto, EdenUserRoles } from '@/utils/constants/common'
+import React, { useCallback, useEffect, useState } from 'react'
+import { User, UpdateUserDto, EdenUserRoles } from '@/utils/constants/common'
 import { useEdenMarketBackend } from '@/contexts/backend'
 import ConfirmationModal from '../confirmation'
 
@@ -28,26 +28,26 @@ export default function UsersModal({ isOpen, onClose }: UsersModalProps) {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
     const [userToDelete, setUserToDelete] = useState<User | null>(null)
 
-    const loadData = async () => {
-        setLoading(true)
-        try {
-            const [usersData, branchesData] = await Promise.all([
-                fetchUsers(),
-                branches.length === 0 ? fetchBranches() : Promise.resolve(branches)
-            ])
-            setUsers(usersData)
-        } catch (error) {
-            console.error('Error loading data:', error)
-        } finally {
-            setLoading(false)
-        }
-    }
+    const loadData = useCallback(async () => {
+            setLoading(true)
+            try {
+                const [usersData] = await Promise.all([
+                    fetchUsers(),
+                    branches.length === 0 ? fetchBranches() : Promise.resolve(branches)
+                ])
+                setUsers(usersData)
+            } catch (error) {
+                console.error('Error loading data:', error)
+            } finally {
+                setLoading(false)
+            }
+    }, [fetchUsers, fetchBranches, branches])
 
     useEffect(() => {
         if (isOpen) {
             loadData()
         }
-    }, [isOpen])
+    }, [isOpen, loadData])
 
     const resetForm = () => {
         setUsername('')
@@ -93,7 +93,7 @@ export default function UsersModal({ isOpen, onClose }: UsersModalProps) {
             if (isEditing && selectedUser) {
                 // Update
                 const updateData: UpdateUserDto = {
-                    role: role as any,
+                    role: role as EdenUserRoles,
                     branchId,
                 }
                 // Only include password if provided (assuming backend handles empty password as "no change")
@@ -115,7 +115,7 @@ export default function UsersModal({ isOpen, onClose }: UsersModalProps) {
                 await createUser({
                     username,
                     password,
-                    role: role as any,
+                    role: role as EdenUserRoles,
                     branchId,
                 })
             }

@@ -111,6 +111,15 @@ export type TransactionItem = {
   discount?: number
 }
 
+export type SettleDebt = {
+  success: true,
+  client: string,
+  oldDebt: number,
+  newDebt: number,
+  paidAmount: number,
+  paymentMethod: 'cash' | 'transfer',
+}
+
 export type BranchColor = {
   name: string
   textColor: string

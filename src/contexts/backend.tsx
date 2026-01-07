@@ -27,6 +27,7 @@ import {
   ProductForm,
   Stock,
   ClientCredit,
+  SettleDebt,
 } from '@/utils/constants/common'
 
 /*************************************************
@@ -222,7 +223,7 @@ export type EdenMarketBackendValue = {
   updateDeliveryOrderStatus: (id: string, status: string) => Promise<DeliveryOrder | null>
   fetchCouriers: () => Promise<User[]>
   fetchDebtors: () => Promise<ClientCredit[]>
-  settleDebt: (dni: string, paymentMethod: 'cash' | 'transfer', amount?: number) => Promise<any>
+  settleDebt: (dni: string, paymentMethod: 'cash' | 'transfer', amount?: number) => Promise<SettleDebt>
   // Cash Register
   checkActiveSession: (userId: string) => Promise<{ hasActiveSession: boolean, session: CashRegisterSession | null }>
   openSession: (userId: string, branchId: string, initialCash: number) => Promise<CashRegisterSession | null>
