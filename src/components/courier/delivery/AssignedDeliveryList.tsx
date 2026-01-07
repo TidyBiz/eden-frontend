@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { useEdenMarketBackend, DeliveryOrder, Product } from '@/contexts/backend';
+import { useEdenMarketBackend, DeliveryOrder } from '@/contexts/backend';
+import { Product } from '@/utils/constants/common';
 
 
 const STATUS_OPTIONS = [
