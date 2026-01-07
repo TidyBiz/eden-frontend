@@ -23,7 +23,7 @@ export enum UserRole {
 
 export type CreateTransactionDto = {
   branchId: string
-  cashierId: string
+  cashierId: string | number
   items: CreateTransactionItemDto[]
   paymentMethod?: 'cash' | 'transfer' | 'credit'
   creditCustomer?: {

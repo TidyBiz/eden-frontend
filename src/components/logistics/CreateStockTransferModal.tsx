@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react'
 import { X, Plus, Trash2, Truck, Package, Save } from 'lucide-react'
 import { useEdenMarketBackend, type CreateStockTransferDto } from '@/contexts/backend'
-import { type Product } from '@/utils/constants/common'
 
 interface CreateStockTransferModalProps {
     isOpen: boolean
@@ -94,8 +93,12 @@ export default function CreateStockTransferModal({
             setItems([])
             setObservations('')
             setDestinationBranchId('')
-        } catch (err: any) {
-            setError(err.message || 'Error al crear el remito')
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                setError(err.message)
+            } else {
+                setError('Error al crear el remito')
+            }
         } finally {
             setIsLoading(false)
         }

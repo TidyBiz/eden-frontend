@@ -44,7 +44,7 @@ const CreateDeliveryOrderForm: React.FC = () => {
   const handleAddItem = () => {
     if (!selectedProductId || selectedQuantity < 1) return;
 
-    setItems(prev => {
+    setItems((prev: any) => {
       const exists = prev.find(item => item.productId === selectedProductId);
       if (exists) {
         // Si ya existe, actualizar cantidad

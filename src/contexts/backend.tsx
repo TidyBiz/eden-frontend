@@ -47,6 +47,7 @@ export type LoginResponse = {
 export type DeliveryOrderItem = {
   productId: string;
   quantity: number;
+  unitPrice: number;
 };
 
 export type CreateDeliveryOrderDto = {

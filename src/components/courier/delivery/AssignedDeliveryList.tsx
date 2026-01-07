@@ -32,7 +32,7 @@ const AssignedDeliveryList: React.FC = () => {
     await updateDeliveryOrderStatus(orderId, 'completed');
     // Esperar un poco para que el backend actualice el estado
     setTimeout(() => {
-      const params: Record<string, string> = user ? { courierId: user.id } : {};
+      const params: Record<string | number, string | number> = user ? { courierId: Number(user.id) } : {};
       if (status) params.status = status;
       fetchDeliveryOrders(params).then(setOrders);
       setLoadingId(null);
@@ -41,7 +41,7 @@ const AssignedDeliveryList: React.FC = () => {
 
   useEffect(() => {
     if (user) {
-      const params: Record<string, string> = { courierId: user.id };
+      const params: Record<string | number, string | number> = { courierId: Number(user.id) };
       if (status) params.status = status;
       fetchDeliveryOrders(params).then(setOrders);
     }
