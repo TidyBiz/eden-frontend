@@ -14,6 +14,7 @@ export default function Navbar({
   openDebtorsModal,
   openUsersModal,
   onCloseRegister,
+  onExtractions,
 }: {
   isLoggedIn: boolean
   user: User | null
@@ -24,6 +25,7 @@ export default function Navbar({
   openDebtorsModal: () => void
   openUsersModal: () => void
   onCloseRegister: () => void
+  onExtractions: () => void
 }) {
   return (
     <div className="bg-gradient-to-r from-[#598C30] to-[#4E7526] rounded-2xl shadow-xl p-6 mb-6 border-2 border-[#273C1F]">
@@ -78,6 +80,19 @@ export default function Navbar({
                             />
                           </svg>
                           Fiados
+                        </button>
+                        <button
+                          onClick={onExtractions}
+                          className="w-full px-4 py-2 text-left text-[#F4F1EA] hover:bg-[#598C30] transition-all duration-200 flex items-center gap-2 font-medium rounded-lg mx-1"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            {/* Billete de dólar con símbolo $ */}
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6h18M3 18h18M4 6v12h16V6H4z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v8m-2-4h4" />
+                            {/* Flecha de extracción hacia la derecha */}
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 12l-4-4m4 4l-4 4m4-4H15" />
+                          </svg>
+                          Extracciones
                         </button>
                         <button
                           onClick={onCloseRegister}

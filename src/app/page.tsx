@@ -21,10 +21,12 @@ import UsersModal from "@/components/modals/users"
 import CourierIndex from "@/components/courier";
 import OpenRegisterModal from "@/components/modals/open-register";
 import CloseRegisterModal from "@/components/modals/close-register";
+import ExtractionModal from "@/components/modals/extractions";
 
 // ** Utils & Types
 import { createCartHandlers } from "@/utils/lib/cart"
 import type { Product, User } from "@/utils/constants/common"
+import toast from 'react-hot-toast'
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -57,6 +59,7 @@ export default function HomePage() {
   const [showDeliveryForm, setShowDeliveryForm] = useState(false)
   const [showDebtorsModal, setShowDebtorsModal] = useState(false)
   const [showUsersModal, setShowUsersModal] = useState(false)
+  const [showExtractionsModal, setShowExtractionsModal] = useState(false)
 
   // Cash Register States
   const [showOpenRegisterModal, setShowOpenRegisterModal] = useState(false);
@@ -64,6 +67,7 @@ export default function HomePage() {
   const [closeRegisterStats, setCloseRegisterStats] = useState<any>(null);
   const [isRegisterLoading, setIsRegisterLoading] = useState(false);
   const [checkingSession, setCheckingSession] = useState(false);
+  const [isExtractionLoading, setIsExtractionLoading] = useState(false);
 
   const {
     user,
@@ -76,7 +80,8 @@ export default function HomePage() {
     checkActiveSession,
     openSession,
     closeSession,
-    getSessionStats
+    getSessionStats,
+    createExtraction
   } = useEdenMarketBackend()
 
   // Check active session when user is authenticated and is a cashier
@@ -99,7 +104,7 @@ export default function HomePage() {
 
   // Scanner focus logic
   const focusScanner = useCallback(() => {
-    if (showLoginModal || showConfirmModal || showClearCartModal || showDebtorsModal || showUsersModal || showOpenRegisterModal || showCloseRegisterModal) return;
+    if (showLoginModal || showConfirmModal || showClearCartModal || showDebtorsModal || showUsersModal || showOpenRegisterModal || showCloseRegisterModal || showExtractionsModal) return;
     if (inputRef.current && !inputRef.current.disabled) {
       setTimeout(() => {
         if (inputRef.current && !showLoginModal && !showConfirmModal && !showClearCartModal) {
@@ -107,7 +112,7 @@ export default function HomePage() {
         }
       }, 10);
     }
-  }, [showLoginModal, showConfirmModal, showClearCartModal, showDebtorsModal, showUsersModal, showOpenRegisterModal, showCloseRegisterModal]);
+  }, [showLoginModal, showConfirmModal, showClearCartModal, showDebtorsModal, showUsersModal, showOpenRegisterModal, showCloseRegisterModal, showExtractionsModal]);
 
   useEffect(() => {
     const newTotal = cart.reduce(
@@ -118,7 +123,7 @@ export default function HomePage() {
   }, [cart])
 
   useEffect(() => {
-    if (showLoginModal || showConfirmModal || showClearCartModal || showDeliveryForm || showDebtorsModal || showUsersModal || showOpenRegisterModal || showCloseRegisterModal) return;
+    if (showLoginModal || showConfirmModal || showClearCartModal || showDeliveryForm || showDebtorsModal || showUsersModal || showOpenRegisterModal || showCloseRegisterModal || showExtractionsModal) return;
     focusScanner();
     const events = ["click", "blur", "focusout", "mousedown", "keydown"];
     events.forEach((event) => {
@@ -145,7 +150,7 @@ export default function HomePage() {
       window.removeEventListener("focus", focusScanner);
       clearInterval(intervalId);
     };
-  }, [focusScanner, showLoginModal, showConfirmModal, showClearCartModal, showDeliveryForm, showDebtorsModal, showUsersModal, showOpenRegisterModal, showCloseRegisterModal]);
+  }, [focusScanner, showLoginModal, showConfirmModal, showClearCartModal, showDeliveryForm, showDebtorsModal, showUsersModal, showOpenRegisterModal, showCloseRegisterModal, showExtractionsModal]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -238,10 +243,78 @@ export default function HomePage() {
       await closeSession(String(user.id), finalCash);
       setShowCloseRegisterModal(false);
       logout();
-      alert("Caja cerrada separada correctamente.");
+      
+      // Toast personalizado con JSX para mejor estilo
+      toast.custom((t) => (
+        <div
+          className={`${
+            t.visible ? 'animate-enter' : 'animate-leave'
+          } max-w-md w-full bg-white shadow-lg rounded-2xl pointer-events-auto flex ring-1 ring-black ring-opacity-5 border-2 border-green-500`}
+        >
+          <div className="flex-1 w-0 p-6">
+            <div className="flex items-start">
+              <div className="flex-shrink-0 text-4xl">✅</div>
+              <div className="ml-4 flex-1">
+                <p className="text-xl font-bold text-[#273C1F] mb-2">
+                  Caja Cerrada Correctamente
+                </p>
+                <p className="text-base text-gray-600">
+                  La sesión de caja ha sido cerrada exitosamente.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="flex border-l border-gray-200">
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-gray-500 hover:text-gray-700 focus:outline-none"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      ), {
+        duration: 5000,
+      });
     } catch (error) {
       console.error("Error closing register:", error);
-      alert("Error al cerrar la caja. Intente nuevamente.");
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      
+      // Toast personalizado de error con JSX
+      toast.custom((t) => (
+        <div
+          className={`${
+            t.visible ? 'animate-enter' : 'animate-leave'
+          } max-w-md w-full bg-white shadow-lg rounded-2xl pointer-events-auto flex ring-1 ring-black ring-opacity-5 border-2 border-red-500`}
+        >
+          <div className="flex-1 w-0 p-6">
+            <div className="flex items-start">
+              <div className="flex-shrink-0 text-4xl">❌</div>
+              <div className="ml-4 flex-1">
+                <p className="text-xl font-bold text-[#273C1F] mb-2">
+                  Error al Cerrar la Caja
+                </p>
+                <p className="text-base text-gray-600">
+                  {errorMessage}
+                </p>
+                <p className="text-sm text-gray-500 mt-1">
+                  Por favor, intente nuevamente.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="flex border-l border-gray-200">
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-gray-500 hover:text-gray-700 focus:outline-none"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      ), {
+        duration: 6000,
+      });
     } finally {
       setIsRegisterLoading(false);
     }
@@ -297,6 +370,41 @@ export default function HomePage() {
     setShowUsersModal(true)
     setShowUserMenu(false)
   }
+
+  const openExtractionsModal = () => {
+    setShowExtractionsModal(true)
+    setShowUserMenu(false)
+  }
+
+  const handleExtraction = async (amount: number, comment: string) => {
+    if (!user || !user.branchId) {
+      toast.error("Error: El usuario no tiene una sucursal asignada. Contacte al administrador.");
+      return;
+    }
+
+    setIsExtractionLoading(true);
+    try {
+      const result = await createExtraction({
+        amount,
+        comment,
+        cashierId: String(user.id),
+        branchId: user.branchId,
+      });
+
+      if (result) {
+        toast.success(`Extracción registrada correctamente\nCantidad: $${amount.toFixed(2)}\nMotivo: ${comment}`);
+        setShowExtractionsModal(false);
+      } else {
+        throw new Error('No se recibió respuesta del servidor');
+      }
+    } catch (error) {
+      console.error("Error al registrar extracción:", error);
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      toast.error(`Error al registrar la extracción: ${errorMessage}`);
+    } finally {
+      setIsExtractionLoading(false);
+    }
+  };
 
   const WelcomeScreen = () => {
     const [username, setUsername] = useState("")
@@ -421,6 +529,7 @@ export default function HomePage() {
           openDebtorsModal={openDebtorsModal}
           openUsersModal={openUsersModal}
           onCloseRegister={handleOpenCloseRegisterModal}
+          onExtractions={openExtractionsModal}
         />
 
         {!isAuthenticated ? (
@@ -494,6 +603,13 @@ export default function HomePage() {
           onConfirmClose={handleConfirmCloseRegister}
           stats={closeRegisterStats}
           isLoading={isRegisterLoading}
+        />
+
+        <ExtractionModal
+          isOpen={showExtractionsModal}
+          onClose={() => setShowExtractionsModal(false)}
+          onSubmit={handleExtraction}
+          isLoading={isExtractionLoading}
         />
       </div>
     </div>

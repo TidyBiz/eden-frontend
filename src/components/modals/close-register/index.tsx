@@ -9,7 +9,8 @@ interface CloseRegisterModalProps {
         cashSales: number;
         transferSales: number;
         creditSales: number;
-        totalCashInBox: number; // calculated (initial + cashSales)
+        totalExtractions: number;
+        totalCashInBox: number; // calculated (initial + cashSales - totalExtractions)
         totalSales: number;
     } | null;
     isLoading: boolean;
@@ -76,6 +77,13 @@ export default function CloseRegisterModal({
                                 <span className="text-gray-600 dark:text-gray-400">Ventas en Efectivo (+):</span>
                                 <span className="font-mono font-medium text-green-600">${stats.cashSales.toFixed(2)}</span>
                             </div>
+
+                            {stats.totalExtractions > 0 && (
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-gray-600 dark:text-gray-400">Extracciones (-):</span>
+                                    <span className="font-mono font-medium text-red-600">${stats.totalExtractions.toFixed(2)}</span>
+                                </div>
+                            )}
 
                             <div className="flex justify-between items-center text-sm pt-2 border-t border-gray-100 dark:border-gray-800">
                                 <span className="font-bold text-gray-700 dark:text-gray-300">Total Efectivo Esperado:</span>

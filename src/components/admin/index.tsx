@@ -2,7 +2,7 @@
 
 // ** React
 import type React from "react"
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, useRef, useCallback } from "react"
 
 // ** Components
 import AddProducts from "../modals/add-products"
@@ -12,7 +12,8 @@ import LogisticsTab from "./sections/LogisticsTab"
 import MarketListTab from "./sections/MarketListTab"
 
 // ** Contexts
-import { useEdenMarketBackend, type BranchAnalytics, type StockAnalytics, type StockByBranch } from "@/contexts/backend"
+import { useEdenMarketBackend, type BranchAnalytics, type StockAnalytics, type StockByBranch, type CashPerBranch } from "@/contexts/backend"
+import { useAdminNotifications, type MoneyExtractionNotification } from "@/hooks/useAdminNotifications"
 
 // ** Types & Utils
 import { BRANCH_COLORS, type BranchColor, type Product } from "@/utils/constants/common"
@@ -40,6 +41,35 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
   const [stockByBranch, setStockByBranch] = useState<StockByBranch[]>([])
   const [selectedBranchId, setSelectedBranchId] = useState<string>("")
   const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(true)
+  const [cashPerBranch, setCashPerBranch] = useState<CashPerBranch[]>([])
+  const [recentExtractions, setRecentExtractions] = useState<MoneyExtractionNotification[]>([])
+
+  // Función para refrescar datos de caja
+  const refreshCashData = useCallback(async () => {
+    const { fetchBranchAnalytics, fetchCashPerBranch } = functionsRef.current;
+    try {
+      await Promise.all([
+        fetchBranchAnalytics().then(setBranchAnalytics),
+        fetchCashPerBranch().then(setCashPerBranch),
+      ]);
+    } catch (error) {
+      console.error('Error refreshing cash data:', error);
+    }
+  }, []);
+
+  // Función para manejar nuevas extracciones
+  const handleNewExtraction = useCallback((extraction: MoneyExtractionNotification) => {
+    // Agregar la nueva extracción al inicio del array
+    setRecentExtractions((prev) => [extraction, ...prev].slice(0, 20)); // Mantener solo las últimas 20
+    // Refrescar datos de caja
+    refreshCashData();
+  }, [refreshCashData]);
+
+  // Conectar a WebSocket para recibir notificaciones de extracciones y cierres de caja
+  useAdminNotifications({
+    onExtraction: handleNewExtraction,
+    onCashRegisterClose: refreshCashData,
+  });
 
   const {
     products,
@@ -52,6 +82,7 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
     fetchStockByBranch,
     fetchTotalRevenue,
     fetchTransactions,
+    fetchCashPerBranch,
   } = useEdenMarketBackend()
 
   // Usar refs para evitar dependencias infinitas
@@ -63,6 +94,7 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
     fetchStockByBranch,
     fetchTotalRevenue,
     fetchTransactions,
+    fetchCashPerBranch,
   })
 
   // Actualizar las referencias cuando cambien las funciones
@@ -74,6 +106,7 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
     fetchStockByBranch,
     fetchTotalRevenue,
     fetchTransactions,
+    fetchCashPerBranch,
   }
 
   useEffect(() => {
@@ -87,6 +120,7 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
           fetchStockAnalytics,
           fetchTransactions,
           fetchTotalRevenue,
+          fetchCashPerBranch,
         } = functionsRef.current
         await Promise.all([
           fetchProducts(),
@@ -95,6 +129,7 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
           fetchStockAnalytics(20).then(setStockAnalytics),
           fetchTransactions(),
           fetchTotalRevenue(),
+          fetchCashPerBranch().then(setCashPerBranch),
         ])
       } catch (error) {
         console.error("Error loading initial data:", error)
@@ -215,6 +250,124 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
           color="purple"
           isLoading={isLoadingAnalytics}
         />
+      </div>
+
+      {/* Extracciones en Tiempo Real */}
+      <div className="bg-[#F4F1EA] rounded-2xl p-6 border-2 border-[#C1E3A4] shadow-lg">
+        <h3 className="text-2xl font-bold text-[#273C1F] mb-6 flex items-center gap-3">
+          <span className="text-3xl">💰</span>
+          Extracciones en Tiempo Real
+        </h3>
+        {recentExtractions.length > 0 ? (
+          <div className="space-y-3 max-h-96 overflow-y-auto">
+            {recentExtractions.map((extraction, index) => {
+              const date = new Date(extraction.createdAt);
+              const formattedDate = date.toLocaleDateString('es-ES', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+              });
+              const formattedTime = date.toLocaleTimeString('es-ES', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+              });
+              
+              return (
+                <div
+                  key={index}
+                  className="bg-white rounded-xl p-4 border-2 border-[#C1E3A4] hover:border-[#598C30] transition-all duration-200 hover:shadow-md"
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-2xl">💰</span>
+                        <span className="font-bold text-lg text-[#273C1F]">
+                          {extraction.branchName}
+                        </span>
+                      </div>
+                      <div className="text-sm text-[#598C30] mb-1">
+                        <span className="font-semibold">Cashier:</span>{' '}
+                        <span className="text-[#273C1F]">{extraction.cashierName}</span>
+                      </div>
+                      {extraction.comment && (
+                        <div className="text-sm text-[#598C30] mb-2">
+                          <span className="font-semibold">Motivo:</span>{' '}
+                          <span className="text-[#273C1F]">{extraction.comment}</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xl font-bold text-red-600 mb-1">
+                        -${extraction.amount.toFixed(2)}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        <div>{formattedDate}</div>
+                        <div>{formattedTime}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="text-[#598C30] text-center py-12 bg-[#C1E3A4]/30 rounded-xl border-2 border-[#C1E3A4]">
+            <div className="text-5xl mb-3">💰</div>
+            <p className="font-semibold text-[#273C1F]">No hay extracciones registradas</p>
+            <p className="text-sm mt-2">Las extracciones aparecerán aquí en tiempo real</p>
+          </div>
+        )}
+      </div>
+
+      {/* Dinero en Caja por Sucursal */}
+      <div className="bg-[#F4F1EA] rounded-2xl p-6 border-2 border-[#C1E3A4] shadow-lg">
+        <h3 className="text-2xl font-bold text-[#273C1F] mb-6 flex items-center gap-3">
+          <span className="text-3xl">💰</span>
+          Dinero en Caja por Sucursal
+        </h3>
+        {isLoadingAnalytics ? (
+          <div className="animate-pulse space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="flex items-center space-x-4">
+                <div className="w-32 h-4 bg-[#C1E3A4] rounded-lg"></div>
+                <div className="flex-1 h-6 bg-[#C1E3A4] rounded-lg"></div>
+                <div className="w-24 h-4 bg-[#C1E3A4] rounded-lg"></div>
+              </div>
+            ))}
+          </div>
+        ) : Array.isArray(cashPerBranch) && cashPerBranch.length > 0 ? (
+          <div className="space-y-4">
+            {cashPerBranch.map((branch) => {
+              const branchCash = Number(branch.totalCash) || 0
+              const totalCash = cashPerBranch.reduce((sum, b) => sum + (Number(b.totalCash) || 0), 0)
+              const percentage = totalCash > 0 ? (branchCash / totalCash) * 100 : 0
+              return (
+                <div key={branch.branchId} className="flex items-center space-x-4 group">
+                  <div className="w-32 text-[#273C1F] text-sm truncate font-semibold">
+                    {branch.branchName || "Sucursal"}
+                  </div>
+                  <div className="flex-1 bg-[#C1E3A4] rounded-full h-8 relative overflow-hidden shadow-inner">
+                    <div
+                      className="bg-gradient-to-r from-[#0aa65d] to-[#598C30] h-8 rounded-full transition-all duration-500 group-hover:from-[#598C30] group-hover:to-[#4E7526]"
+                      style={{ width: `${percentage}%` }}
+                    />
+                    <span className="absolute inset-0 flex items-center justify-center text-white text-sm font-bold drop-shadow-md">
+                      {formatCurrency(branchCash)}
+                    </span>
+                  </div>
+                  <div className="text-[#598C30] text-sm w-24 text-right font-bold">{Math.round(percentage)}%</div>
+                </div>
+              )
+            })}
+          </div>
+        ) : (
+          <div className="text-[#598C30] text-center py-12 bg-[#C1E3A4]/30 rounded-xl border-2 border-[#C1E3A4]">
+            <div className="text-5xl mb-3">💰</div>
+            <p className="font-semibold text-[#273C1F]">No hay dinero en caja disponible</p>
+            <p className="text-sm mt-2">El dinero aparecerá aquí cuando se abran sesiones de caja</p>
+          </div>
+        )}
       </div>
 
       {/* Gráfico de barras de facturación por sucursal */}
