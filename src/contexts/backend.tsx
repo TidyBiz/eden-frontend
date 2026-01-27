@@ -87,6 +87,12 @@ export type RevenuePerBranch = {
   totalRevenue: number
 }
 
+export type CashPerBranch = {
+  branchId: string
+  branchName: string
+  totalCash: number
+}
+
 export type LowStockAlert = {
   id: string
   product: Product
@@ -132,9 +138,26 @@ export type CashRegisterStats = {
     cashSales: number;
     transferSales: number;
     creditSales: number;
+    totalExtractions: number;
     totalCashInBox: number;
     totalSales: number;
   }
+}
+
+export type MoneyExtraction = {
+  id: string;
+  amount: number;
+  comment: string;
+  cashierId: string;
+  branchId: string;
+  createdAt: string;
+}
+
+export type CreateExtractionDto = {
+  amount: number;
+  comment: string;
+  cashierId: string;
+  branchId: string;
 }
 
 // Stock Transfer Types
@@ -203,6 +226,7 @@ export type EdenMarketBackendValue = {
   fetchTransactions: () => Promise<Transaction[]>
   createTransaction: (body: CreateTransactionDto) => Promise<Transaction | null>
   fetchRevenuePerBranch: () => Promise<RevenuePerBranch[]>
+  fetchCashPerBranch: () => Promise<CashPerBranch[]>
   fetchActiveBranchesCount: () => Promise<number>
   fetchTotalRevenueByBranch: () => Promise<number>
   fetchTotalRevenue: () => Promise<number>
@@ -230,6 +254,7 @@ export type EdenMarketBackendValue = {
   openSession: (userId: string, branchId: string, initialCash: number) => Promise<CashRegisterSession | null>
   closeSession: (userId: string, finalCash: number) => Promise<CashRegisterSession | null>
   getSessionStats: (userId: string) => Promise<CashRegisterStats | null>
+  createExtraction: (body: CreateExtractionDto) => Promise<MoneyExtraction | null>
   // Stock Transfer Methods
   fetchStockTransfers: () => Promise<StockTransfer[]>
   fetchStockTransferById: (id: string) => Promise<StockTransfer | null>
@@ -599,6 +624,27 @@ export function EdenMarketBackendProvider({
       return res.data
     } catch (error) {
       console.log('Error fetching revenue per branch:', error)
+      return []
+    }
+  }
+
+  /**
+   * Fetches cash per branch (considering extractions)
+   */
+  const fetchCashPerBranch = async (): Promise<CashPerBranch[]> => {
+    if (!jwt) return []
+    try {
+      const res = await axios.get(
+        `${EDEN_MARKET_BACKEND_URL}/branch/analytics/cash-per-branch`,
+        {
+          headers: {
+            Authorization: `Bearer ${jwt}`,
+          },
+        }
+      )
+      return res.data
+    } catch (error) {
+      console.log('Error fetching cash per branch:', error)
       return []
     }
   }
@@ -1011,6 +1057,22 @@ export function EdenMarketBackendProvider({
     }
   };
 
+  const createExtraction = async (body: CreateExtractionDto): Promise<MoneyExtraction | null> => {
+    if (!jwt) return null;
+    try {
+      const res = await axios.post(
+        `${EDEN_MARKET_BACKEND_URL}/cash-register/extraction`,
+        body,
+        { headers: { Authorization: `Bearer ${jwt}` } }
+      );
+      console.log('res', res.data)
+      return res.data;
+    } catch (error) {
+      console.log('Error creating extraction:', error);
+      throw error;
+    }
+  };
+
   // Stock Transfer Methods
   const fetchStockTransfers = async (): Promise<StockTransfer[]> => {
     if (!jwt) return [];
@@ -1090,6 +1152,7 @@ export function EdenMarketBackendProvider({
     createTransaction,
     // ** Analytics methods
     fetchRevenuePerBranch,
+    fetchCashPerBranch,
     fetchActiveBranchesCount,
     fetchTotalRevenueByBranch,
     fetchTotalRevenue,
@@ -1111,6 +1174,7 @@ export function EdenMarketBackendProvider({
     openSession,
     closeSession,
     getSessionStats,
+    createExtraction,
     fetchUsers,
     deleteUser,
     // Stock Transfer

@@ -63,8 +63,19 @@ const CashierInterface: React.FC<CashierInterfaceProps> = ({
 
       {/* Modal/Formulario para crear pedido de envío */}
       {showDeliveryForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 border-2 border-[#598C30] w-full max-w-[95vw] max-h-[95vh] overflow-y-auto relative">
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4" 
+          onClick={(e) => {
+            // Solo cerrar si el clic fue directamente en el fondo (no en el contenido del modal)
+            if (e.target === e.currentTarget) {
+              setShowDeliveryForm(false);
+            }
+          }}
+        >
+          <div 
+            className="bg-white rounded-2xl shadow-2xl p-8 border-2 border-[#598C30] w-full max-w-[95vw] max-h-[95vh] overflow-y-auto relative"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               className="absolute top-4 right-4 text-[#598C30] hover:text-[#273C1F] text-2xl font-bold z-10"
               onClick={() => setShowDeliveryForm(false)}
