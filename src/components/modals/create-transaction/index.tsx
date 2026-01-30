@@ -1,7 +1,17 @@
+//** React
 import React, { useRef, useEffect, useState } from 'react'
+
+//** Hooks
+import { useModalAnimation } from '@/hooks/useModalAnimation'
+
+//** Axios
 import axios from 'axios'
 import { CartProduct } from '@/utils/lib/cart'
+
+//** Components
 import ConfirmationModal from '../confirmation'
+
+//** Constants & Types
 import { EDEN_MARKET_BACKEND_URL } from '@/utils/constants/api'
 import { safeLocalStorage } from '@/utils/lib/storage'
 import {
@@ -9,7 +19,6 @@ import {
   CreateTransactionDto,
   Transaction,
 } from '@/utils/constants/common'
-
 type PaymentMethod = 'cash' | 'transfer' | 'credit'
 
 interface ConfirmPurchaseModalProps {
@@ -23,6 +32,7 @@ interface ConfirmPurchaseModalProps {
   onError: (error: string) => void
 }
 
+////////////////////////////////////////////////////////////
 export default function ConfirmPurchaseModal({
   isOpen,
   setIsOpen,
@@ -110,7 +120,6 @@ export default function ConfirmPurchaseModal({
               debt = res.data.amount || 0
             }
           } catch (error) {
-            // Ignore error if client not found (new client)
             console.log('Client credit fetch error (likely new client):', error)
           }
         }
@@ -179,12 +188,14 @@ export default function ConfirmPurchaseModal({
     }
   }
 
-  if (!isOpen) return null
+  const { isVisible, isClosing } = useModalAnimation(isOpen)
+
+  if (!isVisible) return null
 
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+      className={`fixed inset-0 bg-black/60 flex justify-center items-center z-50 backdrop-blur-md ${isClosing ? 'animate-modal-overlay-exit' : 'animate-modal-overlay-enter'}`}
       onClick={handleOverlayClick}
       role="dialog"
       aria-modal="true"
@@ -192,7 +203,7 @@ export default function ConfirmPurchaseModal({
     >
       <div
         ref={modalRef}
-        className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto"
+        className={`bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto border border-gray-100 dark:border-gray-800 ${isClosing ? 'animate-modal-content-exit' : 'animate-modal-content-enter'}`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-6">

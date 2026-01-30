@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react'
 import { ProductForm } from '@/utils/constants/common'
 import { useEdenMarketBackend } from '@/contexts/backend'
+import { useModalAnimation } from '@/hooks/useModalAnimation'
 
 interface ConfirmAddProductsProps {
   isOpen: boolean
@@ -54,12 +55,14 @@ export default function ConfirmAddProducts({
     }).format(amount)
   }
 
-  if (!isOpen) return null
+  const { isVisible, isClosing } = useModalAnimation(isOpen)
+
+  if (!isVisible) return null
 
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+      className={`fixed inset-0 bg-black/60 flex justify-center items-center z-50 backdrop-blur-md ${isClosing ? 'animate-modal-overlay-exit' : 'animate-modal-overlay-enter'}`}
       onClick={handleOverlayClick}
       role="dialog"
       aria-modal="true"
@@ -67,7 +70,7 @@ export default function ConfirmAddProducts({
     >
       <div
         ref={modalRef}
-        className="bg-white overflow-y-auto dark:bg-slate-900 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden"
+        className={`bg-white overflow-y-auto dark:bg-slate-900 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] border border-gray-100 dark:border-gray-800 ${isClosing ? 'animate-modal-content-exit' : 'animate-modal-content-enter'}`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700">

@@ -1,13 +1,24 @@
+//** React
 import React, { useEffect, useState } from 'react'
-import { ClientCredit } from '@/utils/constants/common'
+
+//** Contexts
 import { useEdenMarketBackend } from '@/contexts/backend'
+
+//** Types
+import { ClientCredit } from '@/utils/constants/common'
+
+//** Components
 import ConfirmationModal from '../confirmation'
+
+//** Hooks
+import { useModalAnimation } from '@/hooks/useModalAnimation'
 
 interface DebtorsModalProps {
     isOpen: boolean
     onClose: () => void
 }
 
+////////////////////////////////////////////////////////////
 export default function DebtorsModal({ isOpen, onClose }: DebtorsModalProps) {
     const { fetchDebtors, settleDebt } = useEdenMarketBackend()
     const [debtors, setDebtors] = useState<ClientCredit[]>([])
@@ -45,7 +56,7 @@ export default function DebtorsModal({ isOpen, onClose }: DebtorsModalProps) {
 
     const handleSettleClick = (debtor: ClientCredit) => {
         setSelectedDebtor(debtor)
-        setSettleAmount('') // Start empty or with total? User asked for total button, so maybe empty
+        setSettleAmount('') 
         setShowConfirm(true)
     }
 
@@ -73,11 +84,24 @@ export default function DebtorsModal({ isOpen, onClose }: DebtorsModalProps) {
         }
     }
 
-    if (!isOpen) return null
+    const { isVisible, isClosing } = useModalAnimation(isOpen)
+
+    if (!isVisible) return null
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] flex flex-col">
+        <div 
+            className={`fixed inset-0 bg-black/60 flex justify-center items-center z-50 backdrop-blur-md ${isClosing ? 'animate-modal-overlay-exit' : 'animate-modal-overlay-enter'}`}
+            onClick={(e) => {
+                // Solo cerrar si el clic fue directamente en el fondo (no en el contenido del modal)
+                if (e.target === e.currentTarget) {
+                    onClose();
+                }
+            }}
+        >
+            <div 
+                className={`bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] flex flex-col border border-gray-100 dark:border-gray-800 ${isClosing ? 'animate-modal-content-exit' : 'animate-modal-content-enter'}`}
+                onClick={(e) => e.stopPropagation()}
+            >
                 {/* Header */}
                 <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
                     <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">

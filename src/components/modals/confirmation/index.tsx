@@ -1,5 +1,8 @@
+//** React
 import React, { useRef, useEffect } from 'react'
+import { useModalAnimation } from '@/hooks/useModalAnimation'
 
+//** Types
 interface ConfirmationModalProps {
     isOpen: boolean
     onClose: () => void
@@ -12,6 +15,7 @@ interface ConfirmationModalProps {
     type?: 'danger' | 'warning' | 'info'
 }
 
+////////////////////////////////////////////////////////////
 export default function ConfirmationModal({
     isOpen,
     onClose,
@@ -50,7 +54,9 @@ export default function ConfirmationModal({
         }
     }
 
-    if (!isOpen) return null
+    const { isVisible, isClosing } = useModalAnimation(isOpen)
+
+    if (!isVisible) return null
 
     const getConfirmButtonColor = () => {
         switch (type) {
@@ -67,14 +73,14 @@ export default function ConfirmationModal({
     return (
         <div
             ref={overlayRef}
-            className="fixed inset-0 bg-black/50 flex justify-center items-center z-[60]"
+            className={`fixed inset-0 bg-black/60 flex justify-center items-center z-[60] backdrop-blur-md ${isClosing ? 'animate-modal-overlay-exit' : 'animate-modal-overlay-enter'}`}
             onClick={handleOverlayClick}
             role="dialog"
             aria-modal="true"
         >
             <div
                 ref={modalRef}
-                className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-sm w-full mx-4 animate-in fade-in zoom-in duration-200"
+                className={`bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-sm w-full mx-4 border border-gray-100 dark:border-gray-800 ${isClosing ? 'animate-modal-content-exit' : 'animate-modal-content-enter'}`}
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="p-6">

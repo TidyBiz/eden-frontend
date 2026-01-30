@@ -1,6 +1,7 @@
 // ** React
 import React, { useState, useRef, useEffect } from 'react'
 import { Plus, Minus, X } from 'lucide-react'
+import { useModalAnimation } from '@/hooks/useModalAnimation'
 
 // ** Contexts
 import { useEdenMarketBackend } from '@/contexts/backend'
@@ -15,6 +16,7 @@ interface AddStockModalProps {
   onStockAdded?: () => void
 }
 
+////////////////////////////////////////////////////////////
 export default function AddStockModal({
   isOpen,
   setIsOpen,
@@ -125,19 +127,24 @@ export default function AddStockModal({
     }
   }
 
-  if (!isOpen) return null
+  const { isVisible, isClosing } = useModalAnimation(isOpen)
+
+  if (!isVisible) return null
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4"
-      onClick={() => {
-        setIsOpen(false)
-        resetModalState()
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 ${isClosing ? 'animate-modal-overlay-exit' : 'animate-modal-overlay-enter'}`}
+      onClick={(e) => {
+  
+        if (e.target === e.currentTarget) {
+          setIsOpen(false)
+          resetModalState()
+        }
       }}
     >
       <div
         ref={modalRef}
-        className="bg-white overflow-y-auto dark:bg-slate-900 rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-hidden"
+        className={`bg-white overflow-y-auto dark:bg-slate-900 rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] mx-4 border border-gray-100 dark:border-gray-800 ${isClosing ? 'animate-modal-content-exit' : 'animate-modal-content-enter'}`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700">
