@@ -1,11 +1,15 @@
+//** React
 import React, { useRef, useEffect } from 'react'
+import { useModalAnimation } from '@/hooks/useModalAnimation'
 
+//** Types
 interface ClearCartModalProps {
   isOpen: boolean
   setIsOpen: (isOpen: boolean) => void
   onConfirm: () => void
 }
 
+////////////////////////////////////////////////////////////
 export default function ClearCartModal({
   isOpen,
   setIsOpen,
@@ -43,12 +47,14 @@ export default function ClearCartModal({
     setIsOpen(false)
   }
 
-  if (!isOpen) return null
+  const { isVisible, isClosing } = useModalAnimation(isOpen)
+
+  if (!isVisible) return null
 
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+      className={`fixed inset-0 bg-black/60 flex justify-center items-center z-50 backdrop-blur-md ${isClosing ? 'animate-modal-overlay-exit' : 'animate-modal-overlay-enter'}`}
       onClick={handleOverlayClick}
       role="dialog"
       aria-modal="true"
@@ -56,7 +62,7 @@ export default function ClearCartModal({
     >
       <div
         ref={modalRef}
-        className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-md w-full mx-4"
+        className={`bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-md w-full mx-4 border border-gray-100 dark:border-gray-800 ${isClosing ? 'animate-modal-content-exit' : 'animate-modal-content-enter'}`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-6">

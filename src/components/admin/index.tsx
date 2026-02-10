@@ -22,8 +22,11 @@ interface AdminInterfaceProps {
   className?: string
 }
 
+////////////////////////////////////////////////////////////////////////////
 const AdminInterface: React.FC<AdminInterfaceProps> = () => {
   const [activeTab, setActiveTab] = useState<"overview" | "stock" | "stores" | "logistics" | "market-list">("overview")
+  const [displayedTab, setDisplayedTab] = useState<"overview" | "stock" | "stores" | "logistics" | "market-list">("overview")
+  const [isTransitioning, setIsTransitioning] = useState(false)
   const [isAddProductsOpen, setIsAddProductsOpen] = useState(false)
   const [isEditProductOpen, setIsEditProductOpen] = useState(false)
   const [isAddStockOpen, setIsAddStockOpen] = useState(false)
@@ -44,7 +47,6 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
   const [cashPerBranch, setCashPerBranch] = useState<CashPerBranch[]>([])
   const [recentExtractions, setRecentExtractions] = useState<MoneyExtractionNotification[]>([])
 
-  // Función para refrescar datos de caja
   const refreshCashData = useCallback(async () => {
     const { fetchBranchAnalytics, fetchCashPerBranch } = functionsRef.current;
     try {
@@ -57,15 +59,11 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
     }
   }, []);
 
-  // Función para manejar nuevas extracciones
   const handleNewExtraction = useCallback((extraction: MoneyExtractionNotification) => {
-    // Agregar la nueva extracción al inicio del array
-    setRecentExtractions((prev) => [extraction, ...prev].slice(0, 20)); // Mantener solo las últimas 20
-    // Refrescar datos de caja
+    setRecentExtractions((prev) => [extraction, ...prev].slice(0, 20));
     refreshCashData();
   }, [refreshCashData]);
 
-  // Conectar a WebSocket para recibir notificaciones de extracciones y cierres de caja
   useAdminNotifications({
     onExtraction: handleNewExtraction,
     onCashRegisterClose: refreshCashData,
@@ -85,7 +83,6 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
     fetchCashPerBranch,
   } = useEdenMarketBackend()
 
-  // Usar refs para evitar dependencias infinitas
   const functionsRef = useRef({
     fetchProducts,
     fetchBranches,
@@ -97,7 +94,6 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
     fetchCashPerBranch,
   })
 
-  // Actualizar las referencias cuando cambien las funciones
   functionsRef.current = {
     fetchProducts,
     fetchBranches,
@@ -139,6 +135,10 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
     }
 
     loadInitialData()
+  }, [])
+
+  useEffect(() => {
+    setDisplayedTab(activeTab)
   }, [])
 
   useEffect(() => {
@@ -214,7 +214,7 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
     isLoading?: boolean
   }) => (
     <div
-      className={`bg-[#F4F1EA] rounded-2xl p-6 border-2 border-[#C1E3A4] hover:border-[#0aa65d] transition-all duration-300 hover:shadow-xl hover:shadow-[#0aa65d]/20 hover:scale-[1.02]`}
+      className={`bg-[#F4F1EA] rounded-2xl p-6 border-2 border-[#C1E3A4] shadow-lg hover:border-[#0aa65d] transition-all duration-300 hover:shadow-xl hover:shadow-[#0aa65d]/20 hover:scale-[1.02]`}
     >
       <h3 className="text-[#598C30] text-sm font-semibold mb-3 tracking-wide uppercase">{title}</h3>
       {isLoading ? (
@@ -234,7 +234,6 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
 
   const OverviewTab = () => (
     <div className="space-y-6">
-      {/* KPIs principales */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <KPICard
           title="Facturación Total"
@@ -252,7 +251,6 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
         />
       </div>
 
-      {/* Extracciones en Tiempo Real */}
       <div className="bg-[#F4F1EA] rounded-2xl p-6 border-2 border-[#C1E3A4] shadow-lg">
         <h3 className="text-2xl font-bold text-[#273C1F] mb-6 flex items-center gap-3">
           <span className="text-3xl">💰</span>
@@ -320,7 +318,6 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
         )}
       </div>
 
-      {/* Dinero en Caja por Sucursal */}
       <div className="bg-[#F4F1EA] rounded-2xl p-6 border-2 border-[#C1E3A4] shadow-lg">
         <h3 className="text-2xl font-bold text-[#273C1F] mb-6 flex items-center gap-3">
           <span className="text-3xl">💰</span>
@@ -370,7 +367,6 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
         )}
       </div>
 
-      {/* Gráfico de barras de facturación por sucursal */}
       <div className="bg-[#F4F1EA] rounded-2xl p-6 border-2 border-[#C1E3A4] shadow-lg">
         <h3 className="text-2xl font-bold text-[#273C1F] mb-6 flex items-center gap-3">
           <span className="text-3xl">📊</span>
@@ -421,7 +417,6 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
       </div>
       {/* </CHANGE> */}
 
-      {/* Productos con stock bajo */}
       <div className="bg-[#F4F1EA] rounded-2xl p-6 border-2 border-[#C1E3A4] shadow-lg">
         <h3 className="text-2xl font-bold text-[#273C1F] mb-6 flex items-center gap-3">
           <span className="text-3xl">⚠️</span>
@@ -470,7 +465,6 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
 
   const StockTab = () => (
     <div className="space-y-6">
-      {/* Stock total por producto */}
       <div className="bg-[#F4F1EA] rounded-2xl p-6 border-2 border-[#C1E3A4] shadow-lg">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-2xl font-bold text-[#273C1F] flex items-center gap-3">
@@ -748,9 +742,9 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
   )
 
   return (
-    <div className="min-h-screen bg-[#C1E3A4] p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
+    <div className="min-h-screen">
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-[#C1E3A4] rounded-2xl shadow-xl p-6 border-2 border-[#598C30]">
         <div className="mb-8 bg-[#F4F1EA] rounded-2xl p-6 border-2 border-[#598C30] shadow-lg">
           <h1 className="text-4xl font-bold text-[#273C1F] mb-2 flex items-center gap-3">
             <span className="text-5xl">🏪</span>
@@ -761,7 +755,6 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
           </p>
         </div>
 
-        {/* Tabs */}
         <div className="flex space-x-2 mb-8 bg-[#F4F1EA] rounded-2xl p-1.5 shadow-lg border-2 border-[#C1E3A4]">
           {[
             { id: "overview", label: "📊 Resumen", icon: "📊" },
@@ -772,7 +765,16 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
           ].map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as "overview" | "stock" | "stores")}
+              onClick={() => {
+                if (tab.id !== activeTab && !isTransitioning) {
+                  setIsTransitioning(true)
+                  setActiveTab(tab.id as "overview" | "stock" | "stores" | "logistics" | "market-list")
+                  setTimeout(() => {
+                    setDisplayedTab(tab.id as "overview" | "stock" | "stores" | "logistics" | "market-list")
+                    setIsTransitioning(false)
+                  }, 200)
+                }
+              }}
               className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-300 ${activeTab === tab.id
                 ? "bg-[#0aa65d] text-white shadow-lg shadow-[#0aa65d]/30 scale-[1.02]"
                 : "text-[#598C30] hover:text-[#273C1F] hover:bg-[#C1E3A4]"
@@ -783,17 +785,21 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
           ))}
         </div>
 
-        {/* Content */}
-        <div className="min-h-96">
-          {activeTab === "overview" && <OverviewTab />}
-          {activeTab === "stock" && <StockTab />}
-          {activeTab === "market-list" && <MarketListTab />}
-          {activeTab === "logistics" && <LogisticsTab />}
-          {activeTab === "stores" && <StoresTab />}
+        <div className="min-h-96 relative overflow-hidden">
+          <div 
+            key={displayedTab}
+            className={isTransitioning ? 'animate-tab-exit' : 'animate-tab-enter'}
+          >
+            {displayedTab === "overview" && <OverviewTab />}
+            {displayedTab === "stock" && <StockTab />}
+            {displayedTab === "market-list" && <MarketListTab />}
+            {displayedTab === "logistics" && <LogisticsTab />}
+            {displayedTab === "stores" && <StoresTab />}
+          </div>
+        </div>
         </div>
       </div>
 
-      {/* Modals */}
       <AddStockModal
         isOpen={isAddStockOpen}
         setIsOpen={setIsAddStockOpen}

@@ -1,10 +1,19 @@
 "use client"
 
+//** React
 import React, { useState, useEffect } from "react"
-import { useEdenMarketBackend } from "@/contexts/backend"
-import { Product } from "@/utils/constants/common"
-import { X, Save, Trash2, AlertCircle } from "lucide-react"
 
+//** Contexts
+import { useEdenMarketBackend } from "@/contexts/backend"
+
+//** Types
+import { Product } from "@/utils/constants/common"
+
+//** Icons
+import { X, Save, Trash2, AlertCircle } from "lucide-react"
+import { useModalAnimation } from "@/hooks/useModalAnimation"
+
+//** Types
 interface EditProductModalProps {
     isOpen: boolean
     setIsOpen: (isOpen: boolean) => void
@@ -12,6 +21,7 @@ interface EditProductModalProps {
     onProductUpdated: () => void
 }
 
+////////////////////////////////////////////////////////////
 export default function EditProductModal({
     isOpen,
     setIsOpen,
@@ -74,11 +84,23 @@ export default function EditProductModal({
         }
     }
 
-    if (!isOpen || !product) return null
+    const { isVisible, isClosing } = useModalAnimation(isOpen && !!product)
+
+    if (!isVisible || !product) return null
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 text-[#273C1F]">
-            <div className="bg-[#F4F1EA] rounded-[40px] shadow-2xl w-full max-w-lg overflow-hidden border-4 border-[#598C30] animate-in zoom-in duration-200">
+        <div 
+            className={`fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-[100] p-4 text-[#273C1F] ${isClosing ? 'animate-modal-overlay-exit' : 'animate-modal-overlay-enter'}`}
+            onClick={(e) => {
+                if (e.target === e.currentTarget) {
+                    setIsOpen(false)
+                }
+            }}
+        >
+            <div 
+                className={`bg-[#F4F1EA] rounded-[40px] shadow-2xl w-full max-w-lg mx-4 overflow-hidden border-4 border-[#598C30] ${isClosing ? 'animate-modal-content-exit' : 'animate-modal-content-enter'}`}
+                onClick={(e) => e.stopPropagation()}
+            >
                 {/* Header */}
                 <div className="bg-[#598C30] p-8 text-white flex justify-between items-center">
                     <div>

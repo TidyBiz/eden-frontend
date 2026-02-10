@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { X, Plus, Trash2, Truck, Package, Save } from 'lucide-react'
 import { useEdenMarketBackend, type CreateStockTransferDto } from '@/contexts/backend'
+import { useModalAnimation } from '@/hooks/useModalAnimation'
 
 interface CreateStockTransferModalProps {
     isOpen: boolean
@@ -104,12 +105,14 @@ export default function CreateStockTransferModal({
         }
     }
 
-    if (!isOpen) return null
+    const { isVisible, isClosing } = useModalAnimation(isOpen)
+
+    if (!isVisible) return null
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#273C1F]/60 backdrop-blur-sm p-4">
+        <div className={`fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 ${isClosing ? 'animate-modal-overlay-exit' : 'animate-modal-overlay-enter'}`}>
             <div
-                className="bg-[#F4F1EA] rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col border-4 border-[#598C30] overflow-hidden animate-in fade-in zoom-in duration-300"
+                className={`bg-[#F4F1EA] rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] mx-4 flex flex-col border-4 border-[#598C30] overflow-hidden ${isClosing ? 'animate-modal-content-exit' : 'animate-modal-content-enter'}`}
                 onClick={e => e.stopPropagation()}
             >
                 {/* Header */}

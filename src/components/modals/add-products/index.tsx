@@ -1,5 +1,6 @@
 // ** React
 import React, { useEffect, useRef, useState } from 'react'
+import { useModalAnimation } from '@/hooks/useModalAnimation'
 
 // ** Contexts
 import { useEdenMarketBackend } from '@/contexts/backend'
@@ -43,6 +44,7 @@ function AddProducts({
   })
 
   const { createProduct } = useEdenMarketBackend()
+  const { isVisible, isClosing } = useModalAnimation(isOpen)
 
   const isSoldByWeightOptions = [
     {
@@ -69,14 +71,23 @@ function AddProducts({
 
     if (isOpen) {
       document.addEventListener('keydown', handleEscape)
-      document.body.style.overflow = 'hidden'
     }
 
     return () => {
       document.removeEventListener('keydown', handleEscape)
-      document.body.style.overflow = 'unset'
     }
   }, [isOpen, setIsOpen])
+
+  useEffect(() => {
+    if (isVisible) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [isVisible])
 
   const handleOverlayClick = (event: React.MouseEvent) => {
     if (event.target === overlayRef.current) {
@@ -178,10 +189,10 @@ function AddProducts({
       >
         Añadir
       </button>
-      {isOpen && (
+      {isVisible && (
         <div
           ref={overlayRef}
-          className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+          className={`fixed inset-0 bg-black/60 flex justify-center items-center z-50 backdrop-blur-md ${isClosing ? 'animate-modal-overlay-exit' : 'animate-modal-overlay-enter'}`}
           onClick={handleOverlayClick}
           role="dialog"
           aria-modal="true"
@@ -189,32 +200,32 @@ function AddProducts({
         >
           <div
             ref={modalRef}
-            className="bg-white overflow-y-auto dark:bg-slate-900 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden"
+            className={`bg-white overflow-y-auto rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] mx-4 border-2 border-[#598C30] ${isClosing ? 'animate-modal-content-exit' : 'animate-modal-content-enter'}`}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex flex-col justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <div className="flex flex-col justify-between items-center p-6 border-b border-[#598C30]">
+              <h2 className="text-xl font-semibold text-[#273C1F]">
                 Productos
               </h2>
-              <p className="text-gray-500 mb-4">
+              <p className="text-[#273C1F] mb-4">
                 Aquí puedes ver los productos que vas agregando.
               </p>
-              <table className="w-full border-collapse border rounded-md border-gray-300 dark:border-gray-700">
+              <table className="w-full border-collapse rounded-md border-2 border-[#598C30]">
                 <thead>
                   <tr>
-                    <th className="border border-gray-300 dark:border-gray-700 p-2">
+                    <th className="border-2 border-[#598C30] p-2 bg-[#F4F1EA] text-[#273C1F]">
                       Nombre
                     </th>
-                    <th className="border border-gray-300 dark:border-gray-700 p-2">
+                    <th className="border-2 border-[#598C30] p-2 bg-[#F4F1EA] text-[#273C1F]">
                       Precio
                     </th>
-                    <th className="border border-gray-300 dark:border-gray-700 p-2">
+                    <th className="border-2 border-[#598C30] p-2 bg-[#F4F1EA] text-[#273C1F]">
                       Precio Alternativo
                     </th>
-                    <th className="border border-gray-300 dark:border-gray-700 p-2 text-xs">
+                    <th className="border-2 border-[#598C30] p-2 bg-[#F4F1EA] text-[#273C1F] text-xs">
                       Pesable
                     </th>
-                    <th className="border border-gray-300 dark:border-gray-700 p-2 text-xs">
+                    <th className="border-2 border-[#598C30] p-2 bg-[#F4F1EA] text-[#273C1F] text-xs">
                       Min. Stock
                     </th>
                   </tr>
@@ -224,7 +235,7 @@ function AddProducts({
                     <tr>
                       <td
                         colSpan={5}
-                        className="text-center border border-gray-300 dark:border-gray-700 p-2"
+                        className="text-center border-2 border-[#598C30] p-2 text-[#273C1F]"
                       >
                         No hay productos agregados
                       </td>
@@ -232,16 +243,16 @@ function AddProducts({
                   )}
                   {products.map((product) => (
                     <tr key={product.PLU}>
-                      <td className="border border-gray-300 dark:border-gray-700 p-2">
+                      <td className="border-2 border-[#598C30] p-2 text-[#273C1F]">
                         {product.name}
                       </td>
-                      <td className="border border-gray-300 dark:border-gray-700 p-2">
+                      <td className="border-2 border-[#598C30] p-2 text-[#273C1F]">
                         {product.price}
                       </td>
-                      <td className="border border-gray-300 dark:border-gray-700 p-2">
+                      <td className="border-2 border-[#598C30] p-2 text-[#273C1F]">
                         {product.altPrice}
                       </td>
-                      <td className="border border-gray-300 dark:border-gray-700 p-2">
+                      <td className="border-2 border-[#598C30] p-2 text-[#273C1F]">
                         {product.isSoldByWeight ? 'Si' : 'No'}
                       </td>
                     </tr>
@@ -249,15 +260,15 @@ function AddProducts({
                 </tbody>
               </table>
             </div>
-            <div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex justify-between items-center p-6 border-b border-[#598C30]">
               <h2
                 id="modal-title"
-                className="text-xl font-semibold text-gray-900 dark:text-white"
+                className="text-xl font-semibold text-[#273C1F]"
               >
                 Añadir Producto
               </h2>
               <button
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="text-[#598C30] hover:text-[#273C1F] transition-colors p-2 rounded-md hover:bg-[#F4F1EA]"
                 onClick={() => setIsOpen(false)}
                 aria-label="Close modal"
               >
@@ -283,14 +294,14 @@ function AddProducts({
                     <div className="flex flex-col gap-2 w-3/4">
                       <label
                         htmlFor="name"
-                        className="text-gray-600 dark:text-gray-400"
+                        className="text-sm font-semibold text-[#598C30]"
                       >
                         Nombre
                       </label>
                       <input
                         type="text"
                         id="name"
-                        className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-700"
+                        className="w-full px-4 py-2 rounded-xl border-2 border-[#598C30] focus:outline-none focus:ring-2 focus:ring-[#0aa65d] text-[#273C1F] bg-[#F4F1EA]"
                         name="name"
                         value={formData.name}
                         onChange={(e) => handleChange(e)}
@@ -299,14 +310,14 @@ function AddProducts({
                     <div className="flex flex-col gap-2 w-1/4">
                       <label
                         htmlFor="name"
-                        className="text-gray-600 dark:text-gray-400"
+                        className="text-sm font-semibold text-[#598C30]"
                       >
                         PLU
                       </label>
                       <input
                         type="text"
                         id="name"
-                        className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-700"
+                        className="w-full px-4 py-2 rounded-xl border-2 border-[#598C30] focus:outline-none focus:ring-2 focus:ring-[#0aa65d] text-[#273C1F] bg-[#F4F1EA]"
                         name="PLU"
                         value={formData.PLU}
                         onChange={(e) => handleChangeNumber(e)}
@@ -314,17 +325,17 @@ function AddProducts({
                     </div>
                   </div>
                   <div className="flex gap-4">
-                    <div className="flex flex-col gap-2 w-/3">
+                    <div className="flex flex-col gap-2 w-1/3">
                       <label
                         htmlFor="name"
-                        className="text-gray-600 dark:text-gray-400"
+                        className="text-sm font-semibold text-[#598C30]"
                       >
                         Precio
                       </label>
                       <input
                         type="text"
                         id="name"
-                        className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-700"
+                        className="w-full px-4 py-2 rounded-xl border-2 border-[#598C30] focus:outline-none focus:ring-2 focus:ring-[#0aa65d] text-[#273C1F] bg-[#F4F1EA]"
                         name="price"
                         value={formData.price}
                         onChange={(e) => handleChangeNumber(e)}
@@ -333,14 +344,14 @@ function AddProducts({
                     <div className="flex flex-col gap-2 w-1/3">
                       <label
                         htmlFor="name"
-                        className="text-gray-600 dark:text-gray-400"
+                        className="text-sm font-semibold text-[#598C30]"
                       >
                         Precio Alternativo
                       </label>
                       <input
                         type="text"
                         id="name"
-                        className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-700"
+                        className="w-full px-4 py-2 rounded-xl border-2 border-[#598C30] focus:outline-none focus:ring-2 focus:ring-[#0aa65d] text-[#273C1F] bg-[#F4F1EA]"
                         name="altPrice"
                         value={formData.altPrice}
                         onChange={(e) => handleChangeNumber(e)}
@@ -349,13 +360,13 @@ function AddProducts({
                     <div className="flex flex-col gap-2 w-1/3">
                       <label
                         htmlFor="name"
-                        className="text-gray-600 dark:text-gray-400 pr-2"
+                        className="text-sm font-semibold text-[#598C30] pr-2"
                       >
                         Pesable
                       </label>
                       <select
                         id="name"
-                        className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white"
+                        className="w-full px-4 py-2 rounded-xl border-2 border-[#598C30] focus:outline-none focus:ring-2 focus:ring-[#0aa65d] text-[#273C1F] bg-[#F4F1EA]"
                         name="isSoldByWeight"
                         value={formData.isSoldByWeight ? 'true' : 'false'}
                         onChange={(e) => handleChangeBoolean(e)}
@@ -364,7 +375,7 @@ function AddProducts({
                           <option
                             key={option.value}
                             value={option.value}
-                            className="bg-white dark:bg-slate-800 text-gray-900 dark:text-white"
+                            className="bg-[#F4F1EA] text-[#273C1F]"
                           >
                             {option.label}
                           </option>
@@ -376,14 +387,14 @@ function AddProducts({
                     <div className="flex flex-col gap-2 w-1/2">
                       <label
                         htmlFor="name"
-                        className="text-gray-600 dark:text-gray-400"
+                        className="text-sm font-semibold text-[#598C30]"
                       >
                         Stock
                       </label>
                       <input
                         type="text"
                         id="name"
-                        className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-700"
+                        className="w-full px-4 py-2 rounded-xl border-2 border-[#598C30] focus:outline-none focus:ring-2 focus:ring-[#0aa65d] text-[#273C1F] bg-[#F4F1EA]"
                         name="stockNumber"
                         value={formData.stockNumber}
                         onChange={(e) => handleChangeNumber(e)}
@@ -392,20 +403,20 @@ function AddProducts({
                     <div className="flex flex-col gap-2 w-1/2">
                       <label
                         htmlFor="name"
-                        className="text-gray-600 dark:text-gray-400 pr-2"
+                        className="text-sm font-semibold text-[#598C30] pr-2"
                       >
                         Sucursal
                       </label>
                       <select
                         id="name"
-                        className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white"
+                        className="w-full px-4 py-2 rounded-xl border-2 border-[#598C30] focus:outline-none focus:ring-2 focus:ring-[#0aa65d] text-[#273C1F] bg-[#F4F1EA]"
                         name="branchId"
                         value={formData.branchId}
                         onChange={(e) => handleChangeSelect(e)}
                       >
                         <option
                           value=""
-                          className="bg-white dark:bg-slate-800 text-gray-900 dark:text-white"
+                          className="bg-[#F4F1EA] text-[#273C1F]"
                         >
                           Seleccionar Sucursal
                         </option>
@@ -413,7 +424,7 @@ function AddProducts({
                           <option
                             key={option.value}
                             value={option.value}
-                            className="bg-white dark:bg-slate-800 text-gray-900 dark:text-white"
+                            className="bg-[#F4F1EA] text-[#273C1F]"
                           >
                             {option.label}
                           </option>
@@ -425,20 +436,20 @@ function AddProducts({
                     <div className="flex flex-col gap-2 w-full">
                       <label
                         htmlFor="reorderPoint"
-                        className="text-gray-600 dark:text-gray-400 font-bold"
+                        className="text-sm font-bold text-[#598C30]"
                       >
                         Punto de Pedido (Stock Mínimo)
                       </label>
                       <input
                         type="text"
                         id="reorderPoint"
-                        className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-700 bg-yellow-50 dark:bg-yellow-900/10 font-bold"
+                        className="w-full px-4 py-2 rounded-xl border-2 border-[#598C30] focus:outline-none focus:ring-2 focus:ring-[#0aa65d] text-[#273C1F] bg-yellow-50 font-bold"
                         name="reorderPoint"
                         value={formData.reorderPoint}
                         onChange={(e) => handleChangeNumber(e)}
                         placeholder="Ej: 10 (kg o unidades)"
                       />
-                      <p className="text-[10px] text-gray-500">
+                      <p className="text-[10px] text-[#273C1F]">
                         El sistema te avisará cuando el stock sea igual o menor a este valor.
                       </p>
                     </div>
@@ -446,22 +457,22 @@ function AddProducts({
                 </div>
               </div>
             </div>
-            <div className="flex justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+            <div className="flex justify-end gap-3 p-6 border-t border-[#598C30] bg-[#F4F1EA]">
               <button
-                className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-red-500 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-red-600 transition-colors cursor-pointer"
+                className="px-4 py-2 text-gray-700 bg-gray-200 border-2 border-gray-300 rounded-xl hover:bg-gray-300 transition-colors cursor-pointer font-semibold"
                 onClick={() => setIsOpen(false)}
               >
                 Cancelar
               </button>
               <button
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors cursor-pointer"
+                className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors cursor-pointer font-semibold"
                 onClick={handleAddProduct}
               >
                 Agregar
               </button>
               <button
                 disabled={products.length === 0}
-                className="px-4 py-2 bg-green-600 text-white disabled:opacity-50 disabled:cursor-not-allowed rounded-md hover:bg-green-700 transition-colors cursor-pointer"
+                className="px-4 py-2 bg-[#0aa65d] text-white disabled:opacity-50 disabled:cursor-not-allowed rounded-xl hover:bg-[#598C30] transition-colors cursor-pointer font-bold"
                 onClick={handleSubmit}
               >
                 Confirmar

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useModalAnimation } from '@/hooks/useModalAnimation';
 
 interface OpenRegisterModalProps {
     isOpen: boolean;
@@ -14,18 +15,93 @@ export default function OpenRegisterModal({
     userBranch,
 }: OpenRegisterModalProps) {
     const [initialCash, setInitialCash] = useState('');
+    const { isVisible, isClosing } = useModalAnimation(isOpen);
 
-    if (!isOpen) return null;
+    if (!isVisible) return null;
+
+    // Format number with thousand separators (points)
+    const formatNumber = (value: string): string => {
+        // Remove all non-digit characters except decimal point
+        const numericValue = value.replace(/[^\d.]/g, '');
+        
+        if (!numericValue) return '';
+        
+        // Find the last dot to determine if it's a decimal separator
+        const lastDotIndex = numericValue.lastIndexOf('.');
+        const afterLastDot = lastDotIndex !== -1 ? numericValue.substring(lastDotIndex + 1) : '';
+        
+        // If there's a dot and 1-2 digits after it, treat it as decimal
+        const hasDecimal = lastDotIndex !== -1 && afterLastDot.length > 0 && afterLastDot.length <= 2 && /^\d+$/.test(afterLastDot);
+        
+        if (hasDecimal) {
+            // Split: integer part and decimal part
+            const integerPart = numericValue.substring(0, lastDotIndex).replace(/\./g, '');
+            const decimalPart = afterLastDot.substring(0, 2); // Limit to 2 decimal places
+            
+            // Format integer part with thousand separators
+            const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            return `${formattedInteger}.${decimalPart}`;
+        } else {
+            // No decimal part, just format the integer
+            const integerPart = numericValue.replace(/\./g, '');
+            return integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        }
+    };
+
+    // Parse formatted number back to numeric value
+    const parseFormattedNumber = (value: string): number => {
+        if (!value) return 0;
+        
+        // Find the last dot - it's the decimal separator
+        const lastDotIndex = value.lastIndexOf('.');
+        
+        if (lastDotIndex !== -1) {
+            // Check if the part after the last dot has 1-2 digits (likely decimal)
+            const afterLastDot = value.substring(lastDotIndex + 1);
+            const beforeLastDot = value.substring(0, lastDotIndex);
+            
+            // If after last dot has 1-2 digits, treat it as decimal
+            if (afterLastDot.length <= 2 && /^\d+$/.test(afterLastDot)) {
+                // Remove all dots from beforeLastDot (thousand separators)
+                const integerPart = beforeLastDot.replace(/\./g, '');
+                return parseFloat(`${integerPart}.${afterLastDot}`) || 0;
+            } else {
+                // Last dot is not a decimal, remove all dots
+                return parseFloat(value.replace(/\./g, '')) || 0;
+            }
+        }
+        
+        // No decimal point, just remove thousand separators
+        return parseFloat(value.replace(/\./g, '')) || 0;
+    };
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        // Allow empty string
+        if (value === '') {
+            setInitialCash('');
+            return;
+        }
+        // Format the number
+        const formatted = formatNumber(value);
+        setInitialCash(formatted);
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!initialCash) return;
-        onOpenRegister(parseFloat(initialCash));
+        const numericValue = parseFormattedNumber(initialCash);
+        if (numericValue > 0) {
+            onOpenRegister(numericValue);
+        }
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50 backdrop-blur-sm">
-            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden border border-gray-100 dark:border-gray-800 animate-fade-in-up">
+        <div className={`fixed inset-0 bg-black/60 flex justify-center items-center z-50 backdrop-blur-md ${isClosing ? 'animate-modal-overlay-exit' : 'animate-modal-overlay-enter'}`}>
+            <div 
+                className={`bg-white dark:bg-gray-900 rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden border border-gray-100 dark:border-gray-800 ${isClosing ? 'animate-modal-content-exit' : 'animate-modal-content-enter'}`}
+                onClick={(e) => e.stopPropagation()}
+            >
                 {/* Header */}
                 <div className="bg-gradient-to-r from-green-600 to-green-700 p-6">
                     <h2 className="text-2xl font-bold text-white mb-1">Apertura de Caja</h2>
@@ -43,13 +119,12 @@ export default function OpenRegisterModal({
                         <div className="relative">
                             <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-lg">$</span>
                             <input
-                                type="number"
-                                min="0"
-                                step="0.01"
+                                type="text"
+                                inputMode="decimal"
                                 required
                                 value={initialCash}
-                                onChange={(e) => setInitialCash(e.target.value)}
-                                className="w-full pl-8 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
+                                onChange={handleChange}
+                                className="w-full pl-8 pr-4 py-3 text-gray-500 dark:text-gray-200 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
                                 placeholder="0.00"
                                 autoFocus
                             />

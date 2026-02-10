@@ -1,6 +1,12 @@
 "use client";
+
+//** React
 import React, { useState } from 'react';
 
+//** Hooks
+import { useModalAnimation } from '@/hooks/useModalAnimation';
+
+//** Types
 interface ExtractionModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -8,6 +14,7 @@ interface ExtractionModalProps {
   isLoading?: boolean;
 }
 
+////////////////////////////////////////////////////////////
 export default function ExtractionModal({
   isOpen,
   onClose,
@@ -17,8 +24,7 @@ export default function ExtractionModal({
   const [selectedAmount, setSelectedAmount] = useState('');
   const [customAmount, setCustomAmount] = useState('');
   const [comment, setComment] = useState('');
-
-  if (!isOpen) return null;
+  const { isVisible, isClosing } = useModalAnimation(isOpen);
 
   const getFinalAmount = (): number => {
     if (selectedAmount === 'custom') {
@@ -33,11 +39,12 @@ export default function ExtractionModal({
     if (finalAmount <= 0 || !comment.trim()) return;
     
     await onSubmit(finalAmount, comment.trim());
-    // Limpiar formulario después de enviar
     setSelectedAmount('');
     setCustomAmount('');
     setComment('');
   };
+
+  const isAmountSelected = selectedAmount !== '';
 
   const handleClose = () => {
     setSelectedAmount('');
@@ -55,24 +62,29 @@ export default function ExtractionModal({
     { value: '2000', label: '$2,000' },
     { value: '5000', label: '$5,000' },
     { value: '10000', label: '$10,000' },
+    { value: '20000', label: '$20,000' },
+    { value: '30000', label: '$30,000' },
+    { value: '40000', label: '$40,000' },
+    { value: '50000', label: '$50,000' },
     { value: 'custom', label: 'Monto personalizado' },
   ];
 
   const finalAmount = getFinalAmount();
   const isValid = finalAmount > 0 && comment.trim().length > 0;
 
+  if (!isVisible) return null;
+
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4" 
+      className={`fixed inset-0 bg-black/60 flex items-center justify-center z-50 backdrop-blur-md ${isClosing ? 'animate-modal-overlay-exit' : 'animate-modal-overlay-enter'}`}
       onClick={(e) => {
-        // Solo cerrar si el clic fue directamente en el fondo (no en el contenido del modal)
         if (e.target === e.currentTarget) {
           handleClose();
         }
       }}
     >
       <div 
-        className="bg-white rounded-2xl shadow-2xl p-8 border-2 border-[#598C30] w-full max-w-md relative"
+        className={`bg-white rounded-xl shadow-2xl p-8 border-2 border-[#598C30] w-full max-w-md mx-4 relative ${isClosing ? 'animate-modal-content-exit' : 'animate-modal-content-enter'}`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -89,25 +101,28 @@ export default function ExtractionModal({
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Select de cantidad */}
+          {/* Grid de opciones de cantidad */}
           <div>
-            <label className="block text-sm font-semibold text-[#598C30] mb-2">
+            <label className="block text-sm font-semibold text-[#598C30] mb-3">
               Cantidad a extraer
             </label>
-            <select
-              value={selectedAmount}
-              onChange={(e) => setSelectedAmount(e.target.value)}
-              required
-              disabled={isLoading}
-              className="w-full px-4 py-2 border-2 border-[#598C30] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0aa65d] text-[#273C1F] bg-[#F4F1EA]"
-            >
-              <option value="">Seleccionar cantidad</option>
+            <div className="grid grid-cols-2 gap-2">
               {amountOptions.map((option) => (
-                <option key={option.value} value={option.value}>
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setSelectedAmount(option.value)}
+                  disabled={isLoading}
+                  className={`px-4 py-3 rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed border-2 ${
+                    selectedAmount === option.value
+                      ? 'bg-[#0aa65d] text-white border-[#0aa65d] shadow-lg shadow-[#0aa65d]/30 scale-[1.02]'
+                      : 'bg-[#F4F1EA] text-[#273C1F] border-[#598C30] hover:bg-[#C1E3A4] hover:border-[#0aa65d]'
+                  }`}
+                >
                   {option.label}
-                </option>
+                </button>
               ))}
-            </select>
+            </div>
           </div>
 
           {/* Input personalizado si se selecciona "Monto personalizado" */}
@@ -158,7 +173,7 @@ export default function ExtractionModal({
             </button>
             <button
               type="submit"
-              disabled={isLoading || !isValid}
+              disabled={isLoading || !isValid || !isAmountSelected}
               className="flex-1 px-4 py-2 bg-[#0aa65d] hover:bg-[#598C30] text-white rounded-xl font-bold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Procesando...' : 'Confirmar Extracción'}

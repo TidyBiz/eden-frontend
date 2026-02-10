@@ -4,7 +4,6 @@ import type React from "react"
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import { Geist } from "next/font/google"
-import { Chewy } from "next/font/google"
 
 // ** Contexts
 import { useEdenMarketBackend } from "@/contexts/backend"
@@ -22,6 +21,8 @@ import CourierIndex from "@/components/courier";
 import OpenRegisterModal from "@/components/modals/open-register";
 import CloseRegisterModal from "@/components/modals/close-register";
 import ExtractionModal from "@/components/modals/extractions";
+import Louver from "@/components/louver";
+import  WelcomeScreen  from '@/components/welcome'
 
 // ** Utils & Types
 import { createCartHandlers } from "@/utils/lib/cart"
@@ -33,11 +34,6 @@ const geistSans = Geist({
   subsets: ["latin"],
 })
 
-const chewy = Chewy({
-  weight: "400",
-  variable: "--font-chewy",
-  subsets: ["latin"],
-})
 
 interface CartProduct extends Product {
   quantity: number
@@ -69,6 +65,10 @@ export default function HomePage() {
   const [checkingSession, setCheckingSession] = useState(false);
   const [isExtractionLoading, setIsExtractionLoading] = useState(false);
 
+  // Louver States
+  const [showLouver, setShowLouver] = useState(true);
+  const [isLouverAnimating, setIsLouverAnimating] = useState(false);
+
   const {
     user,
     isAuthenticated,
@@ -84,7 +84,17 @@ export default function HomePage() {
     createExtraction
   } = useEdenMarketBackend()
 
-  // Check active session when user is authenticated and is a cashier
+
+  useEffect(() => {
+    if (isInitialized) {
+      const timer = setTimeout(() => {
+        setShowLouver(false);
+      }, 800); 
+      return () => clearTimeout(timer);
+    }
+  }, [isInitialized]);
+
+
   useEffect(() => {
     const checkSession = async () => {
       if (isAuthenticated && user?.role === 'cashier' && !checkingSession) {
@@ -102,7 +112,7 @@ export default function HomePage() {
     }
   }, [isAuthenticated, user]);
 
-  // Scanner focus logic
+  
   const focusScanner = useCallback(() => {
     if (showLoginModal || showConfirmModal || showClearCartModal || showDebtorsModal || showUsersModal || showOpenRegisterModal || showCloseRegisterModal || showExtractionsModal) return;
     if (inputRef.current && !inputRef.current.disabled) {
@@ -200,7 +210,6 @@ export default function HomePage() {
     }
   }
 
-  // Cash Register Handlers
   const handleOpenRegister = async (initialCash: number) => {
     if (!user) return;
 
@@ -242,9 +251,14 @@ export default function HomePage() {
     try {
       await closeSession(String(user.id), finalCash);
       setShowCloseRegisterModal(false);
+      
+      setShowLouver(true);
+      setIsLouverAnimating(true);
+      
+      await new Promise(resolve => setTimeout(resolve, 1050));
+      
       logout();
       
-      // Toast personalizado con JSX para mejor estilo
       toast.custom((t) => (
         <div
           className={`${
@@ -276,11 +290,17 @@ export default function HomePage() {
       ), {
         duration: 5000,
       });
+      
+      await new Promise(resolve => setTimeout(resolve, 300));
+      setShowLouver(false);
+      setIsLouverAnimating(false);
     } catch (error) {
       console.error("Error closing register:", error);
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-      
-      // Toast personalizado de error con JSX
+     
+      setShowLouver(false);
+      setIsLouverAnimating(false);
+
       toast.custom((t) => (
         <div
           className={`${
@@ -320,30 +340,48 @@ export default function HomePage() {
     }
   };
 
-  // Login logic
   const handleLogin = async (username: string, password: string) => {
     setIsLoginLoading(true)
     setLoginError("")
+    setShowLouver(true)
+    setIsLouverAnimating(true)
+    
+    await new Promise(resolve => setTimeout(resolve, 1050))
+    
     try {
       const response = await login({ username, password })
       if (response) {
         setShowLoginModal(false)
         setShowUserMenu(false)
+        await new Promise(resolve => setTimeout(resolve, 300))
+        setShowLouver(false)
       } else {
         setLoginError("Credenciales inválidas. Por favor, inténtalo de nuevo.")
+        setShowLouver(false)
       }
     } catch (err) {
       console.error("Login error:", err)
       setLoginError("Error al iniciar sesión. Por favor, inténtalo de nuevo.")
+      setShowLouver(false)
     } finally {
       setIsLoginLoading(false)
+      setIsLouverAnimating(false)
     }
   }
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    setShowLouver(true)
+    setIsLouverAnimating(true)
+    
+    await new Promise(resolve => setTimeout(resolve, 1050))
+    
     logout()
     setShowUserMenu(false)
     setCart([])
+    
+    await new Promise(resolve => setTimeout(resolve, 300))
+    setShowLouver(false)
+    setIsLouverAnimating(false)
   }
 
   const openLoginModal = () => {
@@ -406,119 +444,34 @@ export default function HomePage() {
     }
   };
 
-  const WelcomeScreen = () => {
-    const [username, setUsername] = useState("")
-    const [password, setPassword] = useState("")
-
-    const handleSubmit = async (e: React.FormEvent) => {
-      e.preventDefault()
-      if (username.trim() && password.trim()) {
-        await handleLogin(username.trim(), password.trim())
-      }
-    }
-
-    return (
-      <div className="fixed inset-0 flex">
-        {/* Left side */}
-        <div
-          className="hidden md:flex md:w-1/2 bg-[#273C1F] relative overflow-hidden"
-          style={{
-            backgroundImage: "url('/bg-2.svg')",
-            backgroundRepeat: "repeat",
-            backgroundSize: "153px",
-          }}
-        >
-          <div className="absolute bottom-18 bg-[#273C1F] left-1/2 -translate-x-1/2 z-10 text-center rounded-xl">
-            <h2
-              className="text-6xl font-bold text-[#a2d45e] tracking-wide whitespace-nowrap"
-              style={{ fontFamily: "var(--font-chewy)" }}
-            >
-              Del campo a tu mesa
-            </h2>
-          </div>
-        </div>
-
-        {/* Right side - Login form */}
-        <div className="w-full md:w-1/2 bg-[#F4F1EA] flex items-center justify-center p-8">
-          <div className="w-full max-w-md space-y-8">
-            <div className="text-center space-y-3">
-              <div className="flex justify-center mb-4">
-                <img src="/logo.svg" alt="Edén" className="h-24 w-auto" />
-              </div>
-              <p className="text-sm tracking-[0.3em] text-gray-600 uppercase font-light">Verdulerías</p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div className="relative">
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="w-full pl-4 pr-4 py-4 bg-white border-2 border-[#598C30] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#598C30] focus:border-transparent text-gray-700 placeholder-gray-400 transition-all text-center"
-                  placeholder="Usuario"
-                  disabled={isLoginLoading}
-                  required
-                />
-              </div>
-
-              <div className="relative">
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-4 pr-4 py-4 bg-white border-2 border-[#598C30] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#598C30] focus:border-transparent text-gray-700 placeholder-gray-400 transition-all text-center"
-                  placeholder="Contraseña"
-                  disabled={isLoginLoading}
-                  required
-                />
-              </div>
-
-              {loginError && (
-                <div className="bg-red-50 border-2 border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
-                  {loginError}
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={isLoginLoading || !username.trim() || !password.trim()}
-                className="w-full py-4 bg-[#273C1F] hover:bg-[#a2d45e] disabled:bg-[#C1E3A4] disabled:cursor-not-allowed text-[#273C1F] rounded-xl font-medium transition-all duration-200 transform hover:scale-[1.01] active:scale-[0.99] text-white"
-              >
-                {isLoginLoading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    Iniciando sesión...
-                  </span>
-                ) : (
-                  "Iniciar sesión"
-                )}
-              </button>
-            </form>
-
-            <div className="flex items-center justify-center gap-2 pt-4">
-              <p className="text-sm text-gray-600">© Edén Verdulerías</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
+ 
   if (!isInitialized) {
     return (
-      <div className={`${geistSans.className} min-h-screen bg-gray-900 p-4`}>
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center py-20">
-            <div className="text-4xl mb-4">⏳</div>
-            <p className="text-gray-300">Cargando...</p>
-          </div>
-        </div>
-      </div>
+      <>
+        <Louver isVisible={true} showLoading={true} />
+      </>
     )
   }
 
   return (
-    <div className={`${geistSans.className} ${chewy.className} min-h-screen bg-[#F4F1EA] p-4`}>
-      <div className="max-w-4xl mx-auto">
+    <div 
+      className={`${geistSans.className} min-h-screen p-4 relative`}
+      style={{
+        backgroundColor: "#F4F1EA",
+      }}
+    >
+      <div
+        className="fixed inset-0 pointer-events-none z-0"
+        style={{
+          backgroundImage: "url('/bg.svg')",
+          backgroundRepeat: "repeat",
+          backgroundSize: "153px",
+          backgroundColor: "#ede0c2",
+          opacity: 0.12,
+        }}
+      />
+      <div className="relative z-10">
+        <div className="max-w-4xl mx-auto">
         <Navbar
           isLoggedIn={isAuthenticated}
           user={user as User | null}
@@ -533,7 +486,7 @@ export default function HomePage() {
         />
 
         {!isAuthenticated ? (
-          <WelcomeScreen />
+          <WelcomeScreen isLoginLoading={isLoginLoading} loginError={loginError} handleSubmit={handleLogin} />
         ) : String((user as User | null)?.role) === "admin" ? (
           <AdminInterface />
         ) : String((user as User | null)?.role) === "courier" ? (
@@ -563,6 +516,7 @@ export default function HomePage() {
             closeLoginModal={closeLoginModal}
             loginError={loginError}
             isLoginLoading={isLoginLoading}
+            isOpen={showLoginModal}
           />
         )}
 
@@ -611,6 +565,12 @@ export default function HomePage() {
           onSubmit={handleExtraction}
           isLoading={isExtractionLoading}
         />
+
+        <Louver 
+          isVisible={showLouver} 
+          showLoading={isLouverAnimating || isLoginLoading}
+        />
+      </div>
       </div>
     </div>
   )

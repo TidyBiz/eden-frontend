@@ -105,8 +105,10 @@
   --radius-xl: calc(var(--radius) + 4px);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  /* Adding Chewy font for brand logo */
+  /* Adding Chewy font for brand logo and login/louver */
   --font-chewy: var(--font-chewy);
+  /* Adding Nunito font for main application (more professional, similar to Chewy) */
+  --font-nunito: var(--font-nunito);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -129,7 +131,7 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-nunito), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 /* Adding custom animations for login screen */
@@ -197,7 +199,95 @@ body {
   animation: shake 0.5s ease-in-out;
 }
 
+/* Modal animations */
+@keyframes modal-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modal-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes modal-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes modal-slide-down {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+}
+
+.animate-modal-overlay-enter {
+  animation: modal-fade-in 0.3s ease-out;
+}
+
+.animate-modal-overlay-exit {
+  animation: modal-fade-out 0.3s ease-in;
+}
+
+.animate-modal-content-enter {
+  animation: modal-slide-up 0.3s ease-out;
+}
+
+.animate-modal-content-exit {
+  animation: modal-slide-down 0.3s ease-in;
+}
+
 /* Custom utility for Chewy font */
 .font-chewy {
   font-family: var(--font-chewy), cursive;
+}
+
+/* Tab transition animations */
+@keyframes tab-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes tab-fade-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+.animate-tab-enter {
+  animation: tab-fade-in 0.3s ease-out;
+}
+
+.animate-tab-exit {
+  animation: tab-fade-out 0.2s ease-in;
 }

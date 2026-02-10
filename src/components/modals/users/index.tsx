@@ -1,13 +1,25 @@
+//** React
 import React, { useCallback, useEffect, useState } from 'react'
-import { User, UpdateUserDto, EdenUserRoles } from '@/utils/constants/common'
+
+//** Contexts
 import { useEdenMarketBackend } from '@/contexts/backend'
+
+//** Types
+import { User, UpdateUserDto, EdenUserRoles } from '@/utils/constants/common'
+
+//** Components
 import ConfirmationModal from '../confirmation'
 
+//** Hooks
+import { useModalAnimation } from '@/hooks/useModalAnimation'
+
+// ** Types
 interface UsersModalProps {
     isOpen: boolean
     onClose: () => void
 }
 
+////////////////////////////////////////////////////////////
 export default function UsersModal({ isOpen, onClose }: UsersModalProps) {
     const { fetchUsers, createUser, updateUser, deleteUser, branches, fetchBranches } = useEdenMarketBackend()
     const [users, setUsers] = useState<User[]>([])
@@ -145,19 +157,32 @@ export default function UsersModal({ isOpen, onClose }: UsersModalProps) {
         }
     }
 
-    if (!isOpen) return null
+    const { isVisible, isClosing } = useModalAnimation(isOpen)
+
+    if (!isVisible) return null
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] flex flex-col">
+        <div 
+            className={`fixed inset-0 bg-black/60 flex justify-center items-center z-50 backdrop-blur-md ${isClosing ? 'animate-modal-overlay-exit' : 'animate-modal-overlay-enter'}`}
+            onClick={(e) => {
+                
+                if (e.target === e.currentTarget) {
+                    onClose();
+                }
+            }}
+        >
+            <div 
+                className={`bg-white rounded-xl shadow-2xl max-w-4xl w-full mx-4 max-h-[90vh] flex flex-col border-2 border-[#598C30] ${isClosing ? 'animate-modal-content-exit' : 'animate-modal-content-enter'}`}
+                onClick={(e) => e.stopPropagation()}
+            >
                 {/* Header */}
-                <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                <div className="bg-[#598C30] p-6 flex justify-between items-center">
+                    <h2 className="text-2xl font-bold text-white">
                         Gestión de Usuarios
                     </h2>
                     <button
                         onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                        className="text-white hover:bg-white/10 rounded-full p-2 transition-colors"
                     >
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -166,13 +191,13 @@ export default function UsersModal({ isOpen, onClose }: UsersModalProps) {
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto p-6">
+                <div className="flex-1 overflow-y-auto p-6 bg-[#F4F1EA]">
                     {!showForm ? (
                         <>
-                            <div className="mb-4 flex justify-end">
+                            <div className="mb-6 flex justify-end">
                                 <button
                                     onClick={handleCreateClick}
-                                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center gap-2"
+                                    className="px-6 py-3 bg-[#0aa65d] text-white rounded-xl hover:bg-[#598C30] transition-colors flex items-center gap-2 font-bold shadow-lg"
                                 >
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -181,43 +206,44 @@ export default function UsersModal({ isOpen, onClose }: UsersModalProps) {
                                 </button>
                             </div>
 
-                            <div className="overflow-x-auto">
+                            <div className="overflow-x-auto bg-white rounded-xl border-2 border-[#598C30]">
                                 <table className="w-full text-left border-collapse">
                                     <thead>
-                                        <tr className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
-                                            <th className="p-3 border-b dark:border-gray-700">Usuario</th>
-                                            <th className="p-3 border-b dark:border-gray-700">Rol</th>
-                                            <th className="p-3 border-b dark:border-gray-700">Sucursal</th>
-                                            <th className="p-3 border-b dark:border-gray-700 text-right">Acciones</th>
+                                        <tr className="bg-[#F4F1EA] text-[#273C1F]">
+                                            <th className="p-4 border-b-2 border-[#598C30] font-semibold">Usuario</th>
+                                            <th className="p-4 border-b-2 border-[#598C30] font-semibold">Rol</th>
+                                            <th className="p-4 border-b-2 border-[#598C30] font-semibold">Sucursal</th>
+                                            <th className="p-4 border-b-2 border-[#598C30] text-right font-semibold">Acciones</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {users.map((u) => (
-                                            <tr key={u.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                                                <td className="p-3 text-gray-900 dark:text-gray-100">{u.username}</td>
-                                                <td className="p-3">
-                                                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${u.role === 'admin'
-                                                        ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
-                                                        : u.role === 'cashier'
-                                                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
-                                                            : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-                                                        }`}>
+                                            <tr key={u.id} className="border-b-2 border-[#598C30] hover:bg-[#F4F1EA]/50">
+                                                <td className="p-4 text-[#273C1F] font-medium">{u.username}</td>
+                                                <td className="p-4">
+                                                    <span className={`px-3 py-1.5 rounded-full text-xs font-bold ${
+                                                        u.role === 'admin'
+                                                            ? 'bg-purple-200 text-purple-800'
+                                                            : u.role === 'cashier'
+                                                                ? 'bg-blue-200 text-blue-800'
+                                                                : 'bg-gray-200 text-gray-800'
+                                                    }`}>
                                                         {u.role}
                                                     </span>
                                                 </td>
-                                                <td className="p-3 text-gray-600 dark:text-gray-400">
+                                                <td className="p-4 text-[#273C1F]">
                                                     {typeof u.branch === 'object' ? u.branch?.name : 'Sucursal ID: ' + u.branch}
                                                 </td>
-                                                <td className="p-3 text-right space-x-2">
+                                                <td className="p-4 text-right space-x-2">
                                                     <button
                                                         onClick={() => handleEditClick(u)}
-                                                        className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                                                        className="px-4 py-2 bg-[#0aa65d] text-white rounded-xl hover:bg-[#598C30] transition-colors font-semibold"
                                                     >
                                                         Editar
                                                     </button>
                                                     <button
                                                         onClick={() => handleDeleteClick(u)}
-                                                        className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
+                                                        className="px-4 py-2 bg-[#c53030] text-white rounded-xl hover:bg-[#dc2626] transition-colors font-semibold"
                                                     >
                                                         Eliminar
                                                     </button>
@@ -229,46 +255,46 @@ export default function UsersModal({ isOpen, onClose }: UsersModalProps) {
                             </div>
                         </>
                     ) : (
-                        <form onSubmit={handleSubmit} className="max-w-md mx-auto space-y-4">
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                        <form onSubmit={handleSubmit} className="max-w-md mx-auto space-y-5 bg-white p-6 rounded-xl border-2 border-[#598C30]">
+                            <h3 className="text-xl font-bold text-[#273C1F] mb-6 text-center">
                                 {isEditing ? 'Editar Usuario' : 'Crear Nuevo Usuario'}
                             </h3>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                <label className="block text-sm font-semibold text-[#598C30] mb-2">
                                     Nombre de Usuario
                                 </label>
                                 <input
                                     type="text"
                                     value={username}
                                     onChange={(e) => setUsername(e.target.value)}
-                                    disabled={isEditing} // Often username is immutable, or maybe specific endpoint needed
-                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:text-gray-100 disabled:opacity-50"
+                                    disabled={isEditing}
+                                    className="w-full px-4 py-2 border-2 border-[#598C30] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0aa65d] text-[#273C1F] bg-[#F4F1EA] disabled:opacity-50"
                                     required
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                <label className="block text-sm font-semibold text-[#598C30] mb-2">
                                     Contraseña {isEditing && '(Dejar en blanco para no cambiar)'}
                                 </label>
                                 <input
                                     type="password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:text-gray-100"
+                                    className="w-full px-4 py-2 border-2 border-[#598C30] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0aa65d] text-[#273C1F] bg-[#F4F1EA]"
                                     required={!isEditing}
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                <label className="block text-sm font-semibold text-[#598C30] mb-2">
                                     Rol
                                 </label>
                                 <select
                                     value={role}
                                     onChange={(e) => setRole(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:text-gray-100"
+                                    className="w-full px-4 py-2 border-2 border-[#598C30] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0aa65d] text-[#273C1F] bg-[#F4F1EA]"
                                 >
                                     <option value="admin">Administrador</option>
                                     <option value="cashier">Cajero</option>
@@ -278,13 +304,13 @@ export default function UsersModal({ isOpen, onClose }: UsersModalProps) {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                <label className="block text-sm font-semibold text-[#598C30] mb-2">
                                     Sucursal
                                 </label>
                                 <select
                                     value={branchId}
                                     onChange={(e) => setBranchId(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:text-gray-100"
+                                    className="w-full px-4 py-2 border-2 border-[#598C30] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0aa65d] text-[#273C1F] bg-[#F4F1EA]"
                                     required
                                 >
                                     <option value="">Seleccionar Sucursal</option>
@@ -300,14 +326,14 @@ export default function UsersModal({ isOpen, onClose }: UsersModalProps) {
                                 <button
                                     type="button"
                                     onClick={() => setShowForm(false)}
-                                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800"
+                                    className="flex-1 px-4 py-2 bg-gray-200 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-300 font-semibold transition-colors"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
+                                    className="flex-1 px-4 py-2 bg-[#0aa65d] text-white rounded-xl hover:bg-[#598C30] disabled:opacity-50 font-bold transition-colors"
                                 >
                                     {loading ? 'Guardando...' : 'Guardar'}
                                 </button>

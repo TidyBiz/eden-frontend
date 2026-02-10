@@ -2,6 +2,7 @@
 
 import type { Product } from "@/utils/constants/common"
 import React from "react";
+import { useModalAnimation } from '@/hooks/useModalAnimation'
 // ...existing code...
 
 interface CartProduct extends Product {
@@ -49,6 +50,8 @@ const CashierInterface: React.FC<CashierInterfaceProps> = ({
   showDeliveryForm,
   setShowDeliveryForm,
 }) => {
+  const { isVisible, isClosing } = useModalAnimation(showDeliveryForm);
+
   return (
     <div>
       {/* Botón para crear pedido de envío */}
@@ -62,20 +65,20 @@ const CashierInterface: React.FC<CashierInterfaceProps> = ({
       </div>
 
       {/* Modal/Formulario para crear pedido de envío */}
-      {showDeliveryForm && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4" 
-          onClick={(e) => {
-            // Solo cerrar si el clic fue directamente en el fondo (no en el contenido del modal)
-            if (e.target === e.currentTarget) {
-              setShowDeliveryForm(false);
-            }
-          }}
-        >
+      {isVisible && (
           <div 
-            className="bg-white rounded-2xl shadow-2xl p-8 border-2 border-[#598C30] w-full max-w-[95vw] max-h-[95vh] overflow-y-auto relative"
-            onClick={(e) => e.stopPropagation()}
+            className={`fixed inset-0 bg-black/60 flex items-center justify-center z-50 backdrop-blur-md p-4 ${isClosing ? 'animate-modal-overlay-exit' : 'animate-modal-overlay-enter'}`}
+            onClick={(e) => {
+              // Solo cerrar si el clic fue directamente en el fondo (no en el contenido del modal)
+              if (e.target === e.currentTarget) {
+                setShowDeliveryForm(false);
+              }
+            }}
           >
+            <div 
+              className={`bg-white rounded-xl shadow-2xl p-8 border-2 border-[#598C30] w-full max-w-[95vw] max-h-[95vh] overflow-y-auto relative ${isClosing ? 'animate-modal-content-exit' : 'animate-modal-content-enter'}`}
+              onClick={(e) => e.stopPropagation()}
+            >
             <button
               className="absolute top-4 right-4 text-[#598C30] hover:text-[#273C1F] text-2xl font-bold z-10"
               onClick={() => setShowDeliveryForm(false)}
