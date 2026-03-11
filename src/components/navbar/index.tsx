@@ -2,6 +2,8 @@
 
 // ** Types
 import type { User } from "@/utils/constants/common"
+import Image from "next/image"
+import logo2 from "../../../public/logo-2.png"
 
 ////////////////////////////////////////////////////////////
 export default function Navbar({
@@ -28,11 +30,13 @@ export default function Navbar({
   onExtractions: () => void
 }) {
   return (
-    <div className="bg-gradient-to-r from-[#598C30] to-[#4E7526] rounded-2xl shadow-xl p-6 mb-6 border-2 border-[#273C1F]">
+    <div className="bg-[#273C1F] rounded-2xl shadow-xl p-6 mb-6 border-2 border-[#273C1F]">
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-[#F4F1EA] mb-2 tracking-tight">Eden Market</h1>
-          <p className="text-[#C1E3A4] font-medium">Sistema de Carrito con Escáner</p>
+        <div className="flex items-center justify-between gap-6">
+          <Image src={logo2} alt="Eden Market" width={150} height={200} />
+          <p className="font-medium w-1/2">
+            Sistema de Carrito con Escáner
+          </p>
         </div>
         <div className="relative user-menu-container">
           <div className="flex items-center gap-3">
