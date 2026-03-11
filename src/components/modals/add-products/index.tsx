@@ -184,7 +184,7 @@ function AddProducts({
   return (
     <div>
       <button
-        className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 cursor-pointer transition-colors"
+        className="bg-[#598C30] text-white px-4 py-2 rounded-md hover:bg-[#598C30]/80 cursor-pointer transition-colors"
         onClick={() => setIsOpen(true)}
       >
         Añadir

@@ -1,10 +1,12 @@
 "use client"
 
 import React, { useState, useEffect } from 'react'
-import { Plus, Truck, Calendar, ArrowRight, CheckCircle, Clock, Download } from 'lucide-react'
+import { Plus, Calendar, ArrowRight, CheckCircle, Clock, Download, RefreshCcw } from 'lucide-react'
 import { useEdenMarketBackend, type StockTransfer, StockTransferStatus } from '@/contexts/backend'
 import CreateStockTransferModal from '../../logistics/CreateStockTransferModal'
 import { generateRemitoPDF } from '@/utils/lib/pdf-generator'
+import truck from '../../../../public/truck.svg'
+import Image from 'next/image'
 
 export default function LogisticsTab() {
     const { fetchStockTransfers, confirmStockTransfer, user } = useEdenMarketBackend()
@@ -57,28 +59,31 @@ export default function LogisticsTab() {
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Header with CTA */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-3xl border-2 border-[#C1E3A4] shadow-xl shadow-[#598C30]/5 hover:shadow-[#598C30]/15 transition-all">
-                <div>
-                    <h3 className="text-2xl font-black text-[#273C1F] flex items-center gap-3">
-                        <Truck className="w-8 h-8 text-[#598C30]" />
-                        Control de Logística y Remitos
-                    </h3>
-                    <p className="text-[#598C30] font-medium mt-1">Monitorea el movimiento de mercadería entre sucursales</p>
-                </div>
-                <button
-                    onClick={() => setIsModalOpen(true)}
-                    className="bg-[#0aa65d] text-white px-8 py-4 rounded-2xl font-black text-lg flex items-center gap-3 hover:scale-105 active:scale-95 transition-all shadow-lg shadow-[#0aa65d]/20 ring-4 ring-[#0aa65d]/10"
-                >
-                    <Plus className="w-6 h-6" />
-                    NUEVO REPARTO
+            <div className="flex flex-col bg-[#A2D45E] justify-between items-start gap-4 p-6 rounded-3xl shadow-xl transition-all">
+                <h3 className="text-2xl font-black text-[#273C1F] flex items-center gap-3">
+                    <Image src={truck} alt="Truck" width={24} height={24} />
+                    Control de Logística y Remitos
+                </h3>
+                <div className="flex justify-between items-center gap-4 w-full">
+                    <p className="text-[#273C1F] text-lg font-bold mt-1">Monitorea el movimiento de mercadería entre sucursales</p>
+                    <button
+                        onClick={() => setIsModalOpen(true)}
+                        className="bg-white text-[#273C1F] px-8 py-4 rounded-2xl font-black text-lg flex items-center gap-3 hover:scale-105 active:scale-95 transition-all shadow-lg shadow-[#0aa65d]/20 ring-4 ring-[#0aa65d]/10"
+                    >
+                        <Plus className="w-6 h-6" />
+                        NUEVO REPARTO
                 </button>
+                </div>
             </div>
 
             {/* List of Remitos */}
-            <div className="bg-[#F4F1EA] rounded-3xl p-8 border-2 border-[#C1E3A4] shadow-lg">
+            <div className="bg-[#F4F1EA] rounded-3xl p-8">
                 <div className="flex items-center justify-between mb-8">
-                    <h4 className="text-xl font-bold text-[#273C1F]">Envíos Recientes</h4>
-                    <button onClick={loadTransfers} className="text-[#598C30] text-sm font-bold hover:underline">Actualizar lista</button>
+                    <h4 className="text-2xl font-bold text-[#273C1F]">Envíos Recientes</h4>
+                    <button onClick={loadTransfers} className="text-white flex items-center gap-2 py-2 px-4 rounded-lg bg-[#598C30] text-sm font-bold cursor-pointer hover:bg-[#598C30]/80 transition-all">
+                        <RefreshCcw className="w-4 h-4" />
+                        Actualizar lista
+                    </button>
                 </div>
 
                 {isLoading ? (
@@ -164,10 +169,12 @@ export default function LogisticsTab() {
                         ))}
                     </div>
                 ) : (
-                    <div className="text-center py-20 bg-white/30 border-4 border-dashed border-[#C1E3A4] rounded-[40px]">
-                        <Truck className="w-20 h-20 text-[#C1E3A4] mx-auto mb-6" />
+                    <div className="text-center py-20 bg-[#C1E3A480] rounded-lg">
+                        <svg width={80} height={80} viewBox="0 0 41 30" fill="none" className="mx-auto mb-6" aria-hidden>
+                            <path d="M29.8182 5.6228H35.4091L41 13.2248V24.3655H37.2075C36.9831 25.9269 36.2068 27.3548 35.0209 28.3875C33.8349 29.4203 32.3187 29.9887 30.75 29.9887C29.1813 29.9887 27.665 29.4203 26.4791 28.3875C25.2932 27.3548 24.5169 25.9269 24.2925 24.3655H14.8439C14.6223 25.9291 13.8472 27.3599 12.6609 28.395C11.4747 29.4301 9.95688 30 8.38636 30C6.81584 30 5.29805 29.4301 4.11178 28.395C2.92551 27.3599 2.15041 25.9291 1.92886 24.3655H0V1.87427C0 1.37718 0.196347 0.900453 0.545846 0.54896C0.895346 0.197467 1.36937 0 1.86364 0H27.9545C28.4488 0 28.9228 0.197467 29.2723 0.54896C29.6218 0.900453 29.8182 1.37718 29.8182 1.87427V5.6228ZM29.8182 9.37133V14.9941H37.2727V14.46L33.5305 9.37133H29.8182Z" fill="#598C30" />
+                        </svg>
                         <h5 className="text-2xl font-black text-[#598C30]">Sin remitos registrados</h5>
-                        <p className="text-gray-500 font-medium max-w-xs mx-auto mt-2">
+                        <p className="text-[#598C30] font-medium max-w-xs mx-auto mt-2">
                             Cuando el dueño cargue mercadería para distribuir, los remitos aparecerán aquí.
                         </p>
                     </div>
