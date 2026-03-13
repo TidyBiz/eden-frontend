@@ -48,6 +48,7 @@
   --text-muted: #C1E3A4;
   --heading: #273C1F;
   --text-accent: #598C30;
+  --text-option: #273C1F;
   --accent-strong: #598C30;
   --accent-strong-hover: #4E7526;
   --action-primary: #0aa65d;
@@ -96,6 +97,7 @@
   --ui-input-bg: #F4F1EA;
   --ui-input-border: #598C30;
   --ui-input-text: #273C1F;
+  --ui-thead-border: #C1E3A480;
 }
 
 .dark {
@@ -136,14 +138,16 @@
   /* Themeable vars – dark theme */
   --surface-primary: #2F5025;
   --surface-secondary: #3B5B33;
-  --surface-accent: #4A6B3E;
-  --surface-highlight: #3B5B33;
+  --surface-accent: #598C30;
+  --surface-highlight: #598C30;
   --surface-muted: #4A6B42;
   --text-on-surface: #FFFFFF;
   --text-muted: #D1D5DB;
   --heading: #FFFFFF;
   --text-accent: #8BC34A;
-  --accent-strong: #8BC34A;
+  --text-accent-strong: #273C1F;
+  --text-option: #273C1F;
+  --accent-strong: #F4F1EA;
   --accent-strong-hover: #9CCC65;
   --action-primary: #8BC34A;
   --status-warning: #D4A574;
@@ -167,7 +171,7 @@
   --ui-card-text: #FFFFFF;
   --ui-card-text-muted: #D1D5DB;
   --ui-card-border: #3B5B33;
-  --ui-card-alt-bg: #598C30;
+  --ui-card-alt-bg: #748F62;
   --ui-card-alt-text: #F4F1EA;
   --ui-card-alt-text-muted: #273C1F;
   --ui-empty-bg: #3B5B33;
@@ -191,6 +195,7 @@
   --ui-input-bg: #3B5B33;
   --ui-input-border: #8BC34A;
   --ui-input-text: #FFFFFF;
+  --ui-thead-border: transparent;
 }
 
 @theme inline {
@@ -247,6 +252,8 @@
   --color-text-muted: var(--text-muted);
   --color-heading: var(--heading);
   --color-text-accent: var(--text-accent);
+  --color-text-accent-strong: var(--text-accent-strong);
+  --color-text-option: var(--text-option);
   --color-accent-strong: var(--accent-strong);
   --color-accent-strong-hover: var(--accent-strong-hover);
   --color-action-primary: var(--action-primary);
@@ -294,6 +301,7 @@
   --color-ui-input-bg: var(--ui-input-bg);
   --color-ui-input-border: var(--ui-input-border);
   --color-ui-input-text: var(--ui-input-text);
+  --color-ui-thead-border: var(--ui-thead-border);
 }
 
 @layer base {

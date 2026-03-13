@@ -165,7 +165,7 @@ export default function MarketListTab() {
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Summary Card */}
-      <div className="bg-surface-highlight rounded-lg p-10 text-white flex flex-col md:flex-row justify-between items-center gap-8 relative overflow-hidden">
+      <div className="bg-surface-highlight rounded-lg p-10 flex flex-col md:flex-row justify-between items-center gap-8 relative overflow-hidden">
         <div className="relative z-10">
           <h2 className="text-4xl font-black text-heading mb-2 flex items-center gap-4">
             <ShoppingCart className="w-10 h-10 text-heading" />
@@ -180,10 +180,10 @@ export default function MarketListTab() {
         <button
           onClick={downloadMarketListPDF}
           disabled={marketItems.length === 0}
-          className="relative z-10 bg-white px-10 py-5 rounded-lg gap-2 cursor-pointer font-black flex items-center hover:bg-black/10 transition-all shadow-xl shadow-black/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white text-heading"
+          className="relative text-text-option z-10 bg-white px-10 py-5 rounded-lg gap-2 cursor-pointer font-black flex items-center hover:bg-black/10 transition-all shadow-xl shadow-black/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white text-heading"
         >
           <Download className="w-6 h-6" />
-          <p className="text-heading">DESCARGAR LISTA</p>
+          <p>DESCARGAR LISTA</p>
         </button>
 
         {/* Decorative Circles */}
@@ -249,11 +249,11 @@ export default function MarketListTab() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-25 px-20 bg-surface-accent rounded-lg">
-              <h4 className="text-2xl font-black text-accent-strong">
+            <div className="text-center py-25 px-20 bg-ui-empty-bg-subtle rounded-lg">
+              <h4 className="text-2xl font-black text-ui-empty-text">
                 ¡Stock al día!
               </h4>
-              <p className="text-accent-strong font-medium text-lg mt-2">
+              <p className="text-ui-empty-text-muted font-medium text-lg mt-2">
                 No se detectaron productos por debajo del umbral mínimo.
               </p>
             </div>

@@ -54,7 +54,7 @@ export default function StockTab({
         <div className="overflow-x-auto rounded-xl">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b-2 border-accent-strong bg-surface-accent/50">
+              <tr className="border-b-2 border-ui-thead-border bg-surface-accent">
                 <th className="text-left py-4 px-4 text-accent-strong font-bold">
                   Producto
                 </th>
@@ -139,9 +139,9 @@ export default function StockTab({
                 })
               ) : (
                 <tr>
-                  <td colSpan={6} className="py-6 text-center text-accent-strong">
-                    <div className="text-center py-12 bg-surface-accent/30 rounded-xl">
-                        <p className="font-semibold text-accent-strong text-3xl">
+                  <td colSpan={6} className="py-6 text-center text-ui-empty-text">
+                    <div className="text-center py-12 bg-ui-empty-bg-subtle rounded-lg">
+                        <p className="font-semibold text-3xl">
                         No hay productos registrados
                         </p>
                     </div>
@@ -210,11 +210,11 @@ export default function StockTab({
             })}
           </div>
         ) : (
-          <div className="text-accent-strong text-center py-12 bg-surface-accent/30 rounded-xl">
-            <p className="font-semibold text-accent-strong text-3xl">
+          <div className="text-center py-12 bg-ui-empty-bg-subtle rounded-lg">
+            <p className="font-semibold text-ui-empty-text text-3xl">
               No hay productos con stock bajo
             </p>
-            <p className="text-lg">
+            <p className="text-lg text-ui-empty-text-muted">
               Todos los productos tienen stock suficiente
             </p>
           </div>
@@ -225,7 +225,7 @@ export default function StockTab({
       <div className="bg-surface-secondary rounded-2xl p-6">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-2xl font-bold text-heading flex items-center gap-3">
-            Stock por Sucursal
+            Stock total por Sucursal
           </h3>
           <div className="flex items-center space-x-4">
             <label className="text-heading text-sm font-semibold">
@@ -234,11 +234,11 @@ export default function StockTab({
             <select
               value={selectedBranchId}
               onChange={(e) => setSelectedBranchId(e.target.value)}
-              className="bg-accent-strong text-white border-2 border-accent-strong rounded-lg px-4 py-2 text-sm transition-all font-medium"
+              className="bg-accent-strong text-text-accent-strong border-2 border-accent-strong rounded-lg px-4 py-2 text-sm transition-all font-medium"
             >
-              <option value="" className='bg-white text-heading hover:bg-accent-strong hover:text-white cursor-pointer'>Todas las sucursales</option>
+              <option value="" className='bg-white text-heading text-text-option hover:bg-accent-strong hover:text-white cursor-pointer'>Todas las sucursales</option>
               {branches.map((branch) => (
-                <option className='bg-white text-heading hover:bg-accent-strong hover:text-white' key={branch.id} value={branch.id}>
+                <option className='bg-white text-heading text-text-option hover:bg-accent-strong hover:text-white' key={branch.id} value={branch.id}>
                   {branch.name}
                 </option>
               ))}
@@ -249,7 +249,7 @@ export default function StockTab({
         <div className="overflow-x-auto rounded-xl">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b-2 border-accent-strong bg-surface-accent/50">
+              <tr className="border-b-2 border-ui-thead-border bg-surface-accent">
                 <th className="text-left py-4 px-4 text-accent-strong font-bold">
                   Sucursal
                 </th>
@@ -318,8 +318,8 @@ export default function StockTab({
               ) : (
                 <tr>
                   <td colSpan={6} className="py-6 text-center text-accent-strong">
-                    <div className="text-center py-12 bg-surface-accent/30 rounded-xl">
-                        <p className="font-semibold text-accent-strong text-3xl">
+                    <div className="text-center py-12 bg-ui-empty-bg-subtle rounded-lg">
+                        <p className="font-semibold text-ui-empty-text text-3xl">
                         No hay stock registrado
                         </p>
                     </div>
