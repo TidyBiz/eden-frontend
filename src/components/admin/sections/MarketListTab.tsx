@@ -3,9 +3,6 @@
 import React, { useState, useEffect } from 'react'
 import {
   ShoppingCart,
-  Info,
-  CheckCircle2,
-  AlertTriangle,
   Download,
   MessageSquare,
 } from 'lucide-react'
@@ -168,13 +165,13 @@ export default function MarketListTab() {
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Summary Card */}
-      <div className="bg-[#A2D45E] rounded-lg p-10 text-white flex flex-col md:flex-row justify-between items-center gap-8 relative overflow-hidden">
+      <div className="bg-surface-highlight rounded-lg p-10 text-white flex flex-col md:flex-row justify-between items-center gap-8 relative overflow-hidden">
         <div className="relative z-10">
-          <h2 className="text-4xl font-black text-[#273C1F] mb-2 flex items-center gap-4">
-            <ShoppingCart className="w-10 h-10" color="#273C1F" />
+          <h2 className="text-4xl font-black text-heading mb-2 flex items-center gap-4">
+            <ShoppingCart className="w-10 h-10 text-heading" />
             Market List
           </h2>
-          <p className="text-[#273C1F] font-black text-lg max-w-md">
+          <p className="text-heading font-black text-lg max-w-md">
             Consolidado de todas las sucursales para tu próxima compra
             mayorista.
           </p>
@@ -183,10 +180,10 @@ export default function MarketListTab() {
         <button
           onClick={downloadMarketListPDF}
           disabled={marketItems.length === 0}
-          className="relative z-10 bg-white px-10 py-5 rounded-lg gap-2 cursor-pointer font-black flex items-center hover:bg-black/10 transition-all shadow-xl shadow-black/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white"
+          className="relative z-10 bg-white px-10 py-5 rounded-lg gap-2 cursor-pointer font-black flex items-center hover:bg-black/10 transition-all shadow-xl shadow-black/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white text-heading"
         >
-          <Download className="w-6 h-6" color="#273C1F" />
-          <p className="text-[#273C1F]">DESCARGAR LISTA</p>
+          <Download className="w-6 h-6" />
+          <p className="text-heading">DESCARGAR LISTA</p>
         </button>
 
         {/* Decorative Circles */}
@@ -197,7 +194,7 @@ export default function MarketListTab() {
       <div className="grid grid-cols-1 lg:grid-cols-6 gap-8">
         {/* Main List */}
         <div className="lg:col-span-4 space-y-4">
-          <h3 className="text-3xl font-black text-[#273C1F] flex items-center gap-2 px-2">
+          <h3 className="text-3xl font-black text-heading flex items-center gap-2 px-2">
             Productos a Reponer
           </h3>
 
@@ -206,7 +203,7 @@ export default function MarketListTab() {
               {[...Array(5)].map((_, i) => (
                 <div
                   key={i}
-                  className="h-20 bg-white animate-pulse rounded-3xl border-2 border-[#C1E3A4]"
+                  className="h-20 bg-white animate-pulse rounded-3xl border-2 border-surface-accent"
                 />
               ))}
             </div>
@@ -215,21 +212,21 @@ export default function MarketListTab() {
               {marketItems.map((item) => (
                 <div
                   key={item.productId}
-                  className="bg-white rounded-3xl p-6 border-2 border-[#C1E3A4] hover:border-[#598C30] transition-all flex justify-between items-center group"
+                  className="bg-white rounded-3xl p-6 border-2 border-surface-accent hover:border-accent-strong transition-all flex justify-between items-center group"
                 >
                   <div className="flex items-center gap-5">
-                    <div className="w-16 h-16 bg-[#F4F1EA] rounded-2xl flex items-center justify-center text-2xl group-hover:bg-[#C1E3A4] transition-colors font-black text-[#598C30]">
+                    <div className="w-16 h-16 bg-surface-secondary rounded-2xl flex items-center justify-center text-2xl group-hover:bg-surface-accent transition-colors font-black text-accent-strong">
                       {item.plu}
                     </div>
                     <div>
-                      <h4 className="text-xl font-black text-[#273C1F] uppercase">
+                      <h4 className="text-xl font-black text-heading uppercase">
                         {item.name}
                       </h4>
                       <div className="flex gap-2 mt-1">
                         {item.details.map((d, i) => (
                           <span
                             key={i}
-                            className="text-[10px] bg-[#F4F1EA] text-[#598C30] px-2 py-1 rounded-full font-bold"
+                            className="text-[10px] bg-surface-secondary text-accent-strong px-2 py-1 rounded-full font-bold"
                           >
                             {d.branch}: {d.current}
                           </span>
@@ -241,7 +238,7 @@ export default function MarketListTab() {
                     <div className="text-xs font-bold text-gray-400 uppercase mb-1">
                       COMPRAR
                     </div>
-                    <div className="text-3xl font-black text-[#0aa65d]">
+                    <div className="text-3xl font-black text-action-primary">
                       {item.totalNeeded.toFixed(1)}{' '}
                       <span className="text-lg opacity-60 font-bold">
                         {item.unit}
@@ -252,11 +249,11 @@ export default function MarketListTab() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-25 px-20 bg-[#C1E3A4] rounded-lg">
-              <h4 className="text-2xl font-black text-[#598C30]">
+            <div className="text-center py-25 px-20 bg-surface-accent rounded-lg">
+              <h4 className="text-2xl font-black text-accent-strong">
                 ¡Stock al día!
               </h4>
-              <p className="text-[#598C30] font-medium text-lg mt-2">
+              <p className="text-accent-strong font-medium text-lg mt-2">
                 No se detectaron productos por debajo del umbral mínimo.
               </p>
             </div>
@@ -265,11 +262,11 @@ export default function MarketListTab() {
 
         {/* Tips & Info */}
         <div className="space-y-6 col-span-2">
-          <div className="text-[#273C1F] pb-8">
-            <h4 className="text-[#598C30] font-black text-3xl mb-4">
+          <div className="text-heading pb-8">
+            <h4 className="text-accent-strong font-black text-3xl mb-4">
               ¿Cómo funciona?
             </h4>
-            <ul className="space-y-4 text-lg text-[#598C30] font-medium">
+            <ul className="space-y-4 text-lg text-accent-strong font-medium">
               <li className="flex gap-3">
                 <div className="flex items-start justify-center shrink-0 text-lg font-black">
                   • 1 -
@@ -294,7 +291,7 @@ export default function MarketListTab() {
             </ul>
           </div>
 
-          <div className="text-[#273C1F]">
+          <div className="text-heading">
             <div className="flex items-center gap-3 mb-4">
               <MessageSquare className="w-6 h-6" />
               <h4 className="font-black text-3xl">Consejo Pro</h4>

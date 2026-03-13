@@ -457,7 +457,7 @@ export default function HomePage() {
     <div 
       className={`${geistSans.className} min-h-screen p-4 relative`}
       style={{
-        backgroundColor: "#F4F1EA",
+        backgroundColor: "var(--background)",
       }}
     >
       <div

@@ -249,21 +249,21 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
     isLoading?: boolean
   }) => (
     <div
-      className={`bg-[#C1E3A4] rounded-2xl p-6 border-2 border-[#C1E3A4] shadow-lg hover:border-[#0aa65d] transition-all duration-300 hover:shadow-xl hover:shadow-[#0aa65d]/20 hover:scale-[1.02]`}
+      className="bg-ui-card-alt-bg rounded-2xl p-6 border-2 border-ui-card-border transition-all duration-300 hover:scale-[1.02]"
     >
-      <h3 className="text-[#598C30] text-sm font-semibold mb-3 tracking-wide uppercase">
+      <h3 className="text-ui-card-alt-text-muted text-sm font-semibold mb-3 tracking-wide uppercase">
         {title}
       </h3>
       {isLoading ? (
         <div className="animate-pulse">
-          <div className="h-8 bg-[#C1E3A4] rounded-lg w-24 mb-2"></div>
-          <div className="h-3 bg-[#C1E3A4] rounded-lg w-16"></div>
+          <div className="h-8 bg-ui-card-alt-text-muted/30 rounded-lg w-24 mb-2"></div>
+          <div className="h-3 bg-ui-card-alt-text-muted/30 rounded-lg w-16"></div>
         </div>
       ) : (
         <>
-          <p className={`text-4xl font-bold text-[#273C1F] mb-1`}>{value}</p>
+          <p className="text-4xl font-bold text-ui-card-alt-text mb-1">{value}</p>
           {subtitle && (
-            <p className="text-[#598C30] text-xs font-medium">{subtitle}</p>
+            <p className="text-ui-card-alt-text-muted text-xs font-medium">{subtitle}</p>
           )}
         </>
       )}
@@ -290,8 +290,8 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
         />
       </div>
 
-      <div className="bg-[#F4F1EA] rounded-2xl p-6 shadow-lg">
-        <h3 className="text-2xl font-bold text-[#273C1F] mb-6 flex items-center gap-3">
+      <div className="bg-ui-card-bg rounded-2xl p-6 shadow-lg">
+        <h3 className="text-2xl font-bold text-ui-card-text mb-6 flex items-center gap-3">
           Extracciones en Tiempo Real
         </h3>
         {recentExtractions.length > 0 ? (
@@ -312,26 +312,26 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
               return (
                 <div
                   key={index}
-                  className="bg-white rounded-xl p-4 hover:border-[#598C30] transition-all duration-200 hover:shadow-md"
+                  className="bg-ui-panel-bg rounded-xl p-4 hover:border-ui-card-border transition-all duration-200 hover:shadow-md border border-ui-card-border"
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         <span className="text-2xl">💰</span>
-                        <span className="font-bold text-lg text-[#273C1F]">
+                        <span className="font-bold text-lg text-ui-card-text">
                           {extraction.branchName}
                         </span>
                       </div>
-                      <div className="text-sm text-[#598C30] mb-1">
+                      <div className="text-sm text-ui-card-text-muted mb-1">
                         <span className="font-semibold">Cashier:</span>{' '}
-                        <span className="text-[#273C1F]">
+                        <span className="text-ui-card-text">
                           {extraction.cashierName}
                         </span>
                       </div>
                       {extraction.comment && (
-                        <div className="text-sm text-[#598C30] mb-2">
+                        <div className="text-sm text-ui-card-text-muted mb-2">
                           <span className="font-semibold">Motivo:</span>{' '}
-                          <span className="text-[#273C1F]">
+                          <span className="text-ui-card-text">
                             {extraction.comment}
                           </span>
                         </div>
@@ -352,28 +352,28 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
             })}
           </div>
         ) : (
-          <div className="text-[#C1E3A480] text-center py-12 bg-[#C1E3A4]/30 rounded-xl">
-            <p className="font-semibold text-[#598C30] text-3xl">
+          <div className="text-center py-12 bg-ui-empty-bg-subtle rounded-xl text-ui-empty-text">
+            <p className="font-semibold text-3xl">
               No hay extracciones registradas
             </p>
-            <p className="text-sm mt-2 text-[#598C30]">
+            <p className="text-sm mt-2 text-ui-empty-text-muted">
               Las extracciones aparecerán aquí en tiempo real
             </p>
           </div>
         )}
       </div>
 
-      <div className="bg-[#598C30] rounded-2xl p-6 shadow-lg">
-        <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+      <div className="bg-ui-panel-bg rounded-2xl p-6 shadow-lg border border-ui-card-border">
+        <h3 className="text-2xl font-bold text-ui-card-text mb-6 flex items-center gap-3">
           Dinero en Caja por Sucursal
         </h3>
         {isLoadingAnalytics ? (
           <div className="animate-pulse space-y-4">
             {[...Array(3)].map((_, i) => (
               <div key={i} className="flex items-center space-x-4">
-                <div className="w-32 h-4 bg-[#C1E3A4] rounded-lg"></div>
-                <div className="flex-1 h-6 bg-[#C1E3A4] rounded-lg"></div>
-                <div className="w-24 h-4 bg-[#C1E3A4] rounded-lg"></div>
+                <div className="w-32 h-4 bg-ui-progress-track rounded-lg"></div>
+                <div className="flex-1 h-6 bg-ui-progress-track rounded-lg"></div>
+                <div className="w-24 h-4 bg-ui-progress-track rounded-lg"></div>
               </div>
             ))}
           </div>
@@ -392,19 +392,19 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
                   key={branch.branchId}
                   className="flex items-center space-x-4 group"
                 >
-                  <div className="max-w-1/3 text-white text-lg truncate font-semibold">
+                  <div className="max-w-1/3 text-ui-card-text text-lg truncate font-semibold">
                     {branch.branchName || 'Sucursal'}
                   </div>
-                  <div className="flex-1 bg-[#8cb869] rounded-full h-8 relative overflow-hidden shadow-inner">
+                  <div className="flex-1 bg-ui-progress-track rounded-full h-8 relative overflow-hidden shadow-inner">
                     <div
-                      className="bg-[#273C1F] h-8 rounded-full transition-all duration-500"
+                      className="bg-ui-progress-fill h-8 rounded-full transition-all duration-500"
                       style={{ width: `${percentage}%` }}
                     />
-                    <span className="absolute inset-0 flex items-center justify-center text-white text-lg font-bold drop-shadow-md">
+                    <span className="absolute inset-0 flex items-center justify-center text-ui-card-text text-lg font-bold drop-shadow-md">
                       {formatCurrency(branchCash)}
                     </span>
                   </div>
-                  <div className="text-white text-lg w-24 text-right font-bold">
+                  <div className="text-ui-card-text-muted text-lg w-24 text-right font-bold">
                     {Math.round(percentage)}%
                   </div>
                 </div>
@@ -412,29 +412,29 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
             })}
           </div>
         ) : (
-          <div className="text-[#598C30] text-center py-12 bg-[#C1E3A4]/30 rounded-xl border-2 border-[#C1E3A4]">
+          <div className="text-center py-12 bg-ui-empty-bg-subtle rounded-xl border-2 border-ui-card-border text-ui-empty-text">
             <div className="text-5xl mb-3">💰</div>
-            <p className="font-semibold text-[#273C1F]">
+            <p className="font-semibold text-ui-empty-text">
               No hay dinero en caja disponible
             </p>
-            <p className="text-sm mt-2">
+            <p className="text-sm mt-2 text-ui-empty-text-muted">
               El dinero aparecerá aquí cuando se abran sesiones de caja
             </p>
           </div>
         )}
       </div>
 
-      <div className="bg-[#F4F1EA] rounded-2xl p-6 shadow-lg">
-        <h3 className="text-2xl font-bold text-[#273C1F] mb-6 flex items-center gap-3">
+      <div className="bg-ui-card-bg rounded-2xl p-6 shadow-lg border border-ui-card-border">
+        <h3 className="text-2xl font-bold text-ui-card-text mb-6 flex items-center gap-3">
           Facturación por Sucursal
         </h3>
         {isLoadingAnalytics ? (
           <div className="animate-pulse space-y-4">
             {[...Array(3)].map((_, i) => (
               <div key={i} className="flex items-center space-x-4">
-                <div className="w-32 h-4 bg-[#C1E3A4] rounded-lg"></div>
-                <div className="flex-1 h-6 bg-[#C1E3A4] rounded-lg"></div>
-                <div className="w-12 h-4 bg-[#C1E3A4] rounded-lg"></div>
+                <div className="w-32 h-4 bg-ui-progress-track rounded-lg"></div>
+                <div className="flex-1 h-6 bg-ui-progress-track rounded-lg"></div>
+                <div className="w-12 h-4 bg-ui-progress-track rounded-lg"></div>
               </div>
             ))}
           </div>
@@ -451,19 +451,19 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
                   key={branch.branchId}
                   className="flex items-center space-x-4 group"
                 >
-                  <div className="w-32 text-[#273C1F] text-sm truncate font-semibold">
+                  <div className="w-32 text-ui-card-text text-sm truncate font-semibold">
                     {branch.branchName || 'Sucursal'}
                   </div>
-                  <div className="flex-1 bg-[#C1E3A4] rounded-full h-8 relative overflow-hidden shadow-inner">
+                  <div className="flex-1 bg-ui-progress-track rounded-full h-8 relative overflow-hidden shadow-inner">
                     <div
-                      className="bg-gradient-to-r from-[#0aa65d] to-[#598C30] h-8 rounded-full transition-all duration-500 group-hover:from-[#598C30] group-hover:to-[#4E7526]"
+                      className="bg-ui-progress-fill h-8 rounded-full transition-all duration-500"
                       style={{ width: `${percentage}%` }}
                     />
-                    <span className="absolute inset-0 flex items-center justify-center text-white text-sm font-bold drop-shadow-md">
+                    <span className="absolute inset-0 flex items-center justify-center text-ui-card-text text-sm font-bold drop-shadow-md">
                       {formatCurrency(branchRevenue)}
                     </span>
                   </div>
-                  <div className="text-[#598C30] text-sm w-12 text-right font-bold">
+                  <div className="text-ui-card-text-muted text-sm w-12 text-right font-bold">
                     {Math.round(percentage)}%
                   </div>
                 </div>
@@ -471,11 +471,11 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
             })}
           </div>
         ) : (
-          <div className="text-[#598C30] text-center py-12 bg-[#C1E3A4]/30 rounded-xl">
-            <p className="font-semibold text-[#598C30] text-3xl">
+          <div className="text-center py-12 bg-ui-empty-bg-subtle rounded-xl text-ui-empty-text">
+            <p className="font-semibold text-3xl text-ui-empty-text">
               No hay datos de facturación disponibles
             </p>
-            <p className="text-sm mt-2 text-[#598C30]">
+            <p className="text-sm mt-2 text-ui-empty-text-muted">
               Las ventas aparecerán aquí una vez que se registren transacciones
             </p>
           </div>
@@ -483,14 +483,14 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
       </div>
       {/* </CHANGE> */}
 
-      <div className={`${stockAnalytics.lowStockAlerts.length > 0 ? 'bg-[#FF0D0D] text-white' : 'bg-[#F4F1EA] text-[#273C1F]'} rounded-lg p-6`}>
+      <div className={`${stockAnalytics.lowStockAlerts.length > 0 ? 'bg-status-error text-white' : 'bg-ui-card-bg text-ui-card-text'} rounded-lg p-6 border border-ui-card-border`}>
         <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
           Alertas de Stock Bajo
         </h3>
         {isLoadingAnalytics ? (
           <div className="animate-pulse grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="bg-[#F4F1EA66] rounded-lg p-4 h-24"></div>
+              <div key={i} className="bg-ui-empty-bg-subtle rounded-lg p-4 h-24"></div>
             ))}
           </div>
         ) : Array.isArray(stockAnalytics.lowStockAlerts) &&
@@ -499,7 +499,7 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
             {stockAnalytics.lowStockAlerts.map((alert) => (
               <div
                 key={alert.id}
-                className="bg-[#F4F1EA66] rounded-lg p-4 transition-all duration-300 hover:shadow-lg hover:shadow-[#B0855F]/30"
+                className="bg-ui-empty-bg-subtle rounded-lg p-4 transition-all duration-300 hover:shadow-lg hover:shadow-status-warning/30"
               >
                 <div className="flex items-center justify-between">
                   <div>
@@ -527,11 +527,11 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
             ))}
           </div>
         ) : (
-          <div className="text-[#598C30] text-center py-12 bg-[#C1E3A4]/30 rounded-xl">
-            <p className="font-semibold text-[#598C30] text-3xl">
+          <div className="text-center py-12 bg-ui-empty-bg-subtle rounded-xl text-ui-empty-text">
+            <p className="font-semibold text-3xl text-ui-empty-text">
               No hay productos con stock bajo
             </p>
-            <p className="text-sm mt-2 text-[#598C30]">
+            <p className="text-sm mt-2 text-ui-empty-text-muted">
               Todos los productos tienen stock suficiente
             </p>
           </div>
@@ -543,21 +543,21 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
 
   const StoresTab = () => (
     <div className="space-y-6">
-      <div className="bg-[#F4F1EA] rounded-2xl p-6">
-        <h3 className="text-2xl font-bold text-[#273C1F] mb-6 flex items-center gap-3">
+      <div className="bg-ui-card-bg rounded-2xl p-6 border border-ui-card-border">
+        <h3 className="text-2xl font-bold text-ui-card-text mb-6 flex items-center gap-3">
           Gestión de Sucursales
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {branches.map((store, i) => (
             <div
               key={store.id}
-              className="bg-[#C1E3A4] rounded-xl p-5 hover:border-[#0aa65d] transition-all duration-300 hover:shadow-lg hover:shadow-[#0aa65d]/20"
+              className="bg-ui-card-alt-bg rounded-xl p-5 hover:border-ui-card-border transition-all duration-300 hover:shadow-lg border border-ui-card-border"
             >
               <div className="flex flex-col justify-between gap-4">
-                <h4 className="font-bold text-[#598C30] text-lg">
+                <h4 className="font-bold text-ui-card-alt-text-muted text-lg">
                   Sucursal #{i + 1}
                 </h4>
-                <p className="text-[#598C30] text-sm">
+                <p className="text-ui-card-alt-text-muted text-sm">
                   {store.name}
                 </p>
               </div>
@@ -573,19 +573,19 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
     <div className="min-h-screen">
       <div className="max-w-4xl mx-auto">
         <div className="p-6">
-          <div className="mb-8 bg-[#F4F1EA] rounded-2xl p-6 shadow-lg">
-            <div className="text-4xl font-bold text-[#273C1F] mb-2 flex items-center gap-3">
+          <div className="mb-8 bg-ui-panel-bg rounded-2xl p-6 shadow-lg border border-ui-card-border">
+            <div className="text-4xl font-bold text-ui-panel-text mb-2 flex items-center gap-3">
               <Image src={market} alt="Market" width={50} height={50} />
               <div className="ml-6 flex flex-col">
                 <h1 className="text-3xl">Panel de Administración - Eden Verdulerías</h1>
-                <p className="text-[#598C30] text-lg font-medium">
+                <p className="text-ui-panel-text-muted text-lg font-medium">
                   Gestión completa de la cadena de verdulerías en tiempo real
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="flex space-x-2 mb-8 bg-[#273C1F] rounded-2xl p-1.5 shadow-lg">
+          <div className="flex space-x-2 mb-8 bg-ui-tab-bar-bg rounded-2xl p-1.5 shadow-lg">
             {[
               { id: 'overview', label: 'RESUMEN', icon: '📊' },
               { id: 'stock', label: 'STOCK', icon: '📦' },
@@ -619,10 +619,10 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
                     }, 200)
                   }
                 }}
-                className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-300 ${
+                className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-300 cursor-pointer ${
                   activeTab === tab.id
-                    ? 'bg-[#F4F1EA] text-[#273C1F] shadow-lg shadow-[#0aa65d]/30 scale-[1.02]'
-                    : 'text-[#A2D45E] hover:text-[#273C1F] hover:bg-[#C1E3A4]'
+                    ? 'bg-ui-tab-active-bg text-ui-tab-active-text shadow-lg scale-[1.02]'
+                    : 'bg-ui-tab-inactive-bg text-ui-tab-inactive-text hover:bg-ui-dropdown-item-hover'
                 }`}
               >
                 {tab.label}

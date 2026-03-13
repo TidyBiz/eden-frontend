@@ -59,16 +59,16 @@ export default function LogisticsTab() {
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Header with CTA */}
-            <div className="flex flex-col bg-[#A2D45E] justify-between items-start gap-4 p-6 rounded-3xl shadow-xl transition-all">
-                <h3 className="text-2xl font-black text-[#273C1F] flex items-center gap-3">
+            <div className="flex flex-col bg-surface-highlight justify-between items-start gap-4 p-6 rounded-3xl shadow-xl transition-all">
+                <h3 className="text-2xl font-black text-heading flex items-center gap-3">
                     <Image src={truck} alt="Truck" width={24} height={24} />
                     Control de Logística y Remitos
                 </h3>
                 <div className="flex justify-between items-center gap-4 w-full">
-                    <p className="text-[#273C1F] text-lg font-bold mt-1">Monitorea el movimiento de mercadería entre sucursales</p>
+                    <p className="text-heading text-lg font-bold mt-1">Monitorea el movimiento de mercadería entre sucursales</p>
                     <button
                         onClick={() => setIsModalOpen(true)}
-                        className="bg-white text-[#273C1F] px-8 py-4 rounded-2xl font-black text-lg flex items-center gap-3 hover:scale-105 active:scale-95 transition-all shadow-lg shadow-[#0aa65d]/20 ring-4 ring-[#0aa65d]/10"
+                        className="bg-white text-heading px-8 py-4 rounded-2xl font-black text-lg flex items-center gap-3 hover:scale-105 active:scale-95 transition-all shadow-lg shadow-action-primary/20 ring-4 ring-action-primary/10"
                     >
                         <Plus className="w-6 h-6" />
                         NUEVO REPARTO
@@ -77,10 +77,10 @@ export default function LogisticsTab() {
             </div>
 
             {/* List of Remitos */}
-            <div className="bg-[#F4F1EA] rounded-3xl p-8">
+            <div className="bg-surface-secondary rounded-3xl p-8">
                 <div className="flex items-center justify-between mb-8">
-                    <h4 className="text-2xl font-bold text-[#273C1F]">Envíos Recientes</h4>
-                    <button onClick={loadTransfers} className="text-white flex items-center gap-2 py-2 px-4 rounded-lg bg-[#598C30] text-sm font-bold cursor-pointer hover:bg-[#598C30]/80 transition-all">
+                    <h4 className="text-2xl font-bold text-heading">Envíos Recientes</h4>
+                    <button onClick={loadTransfers} className="text-white flex items-center gap-2 py-2 px-4 rounded-lg bg-accent-strong text-sm font-bold cursor-pointer hover:bg-accent-strong/80 transition-all">
                         <RefreshCcw className="w-4 h-4" />
                         Actualizar lista
                     </button>
@@ -97,7 +97,7 @@ export default function LogisticsTab() {
                         {transfers.map((t) => (
                             <div
                                 key={t.id}
-                                className="bg-white border-2 border-[#C1E3A4] rounded-2xl p-6 hover:border-[#598C30] transition-all group relative overflow-hidden"
+                                className="bg-white border-2 border-surface-accent rounded-2xl p-6 hover:border-accent-strong transition-all group relative overflow-hidden"
                             >
                                 {/* Visual indicator for status */}
                                 <div className={`absolute left-0 top-0 bottom-0 w-2 ${t.status === StockTransferStatus.RECEIVED ? 'bg-green-500' : 'bg-yellow-400'}`} />
@@ -106,8 +106,8 @@ export default function LogisticsTab() {
                                     {/* Left: Info & Route */}
                                     <div className="flex-1 flex flex-col md:flex-row items-start md:items-center gap-6">
                                         <div>
-                                            <div className="text-xs font-black text-[#598C30] tracking-widest uppercase mb-1">REMITO</div>
-                                            <div className="text-lg font-black text-[#273C1F]">{t.remitoNumber}</div>
+                                            <div className="text-xs font-black text-accent-strong tracking-widest uppercase mb-1">REMITO</div>
+                                            <div className="text-lg font-black text-heading">{t.remitoNumber}</div>
                                             <div className="text-sm text-gray-500 flex items-center gap-1.5 mt-1 font-medium">
                                                 <Calendar className="w-3.5 h-3.5" /> {new Date(t.createdAt).toLocaleDateString()}
                                             </div>
@@ -122,10 +122,10 @@ export default function LogisticsTab() {
                                                     {t.originBranch.name}
                                                 </div>
                                             </div>
-                                            <ArrowRight className="w-5 h-5 text-[#C1E3A4]" />
+                                            <ArrowRight className="w-5 h-5 text-text-muted" />
                                             <div className="text-center">
-                                                <div className="text-[10px] font-bold text-[#598C30] uppercase">DESTINO</div>
-                                                <div className="bg-[#C1E3A4]/30 px-3 py-1 rounded-lg text-sm font-black text-[#598C30] border border-[#C1E3A4] uppercase">
+                                                <div className="text-[10px] font-bold text-accent-strong uppercase">DESTINO</div>
+                                                <div className="bg-surface-accent/30 px-3 py-1 rounded-lg text-sm font-black text-accent-strong border border-surface-accent uppercase">
                                                     {t.destinationBranch.name}
                                                 </div>
                                             </div>
@@ -137,14 +137,14 @@ export default function LogisticsTab() {
                                         <div className="flex items-center gap-4">
                                             <div className="text-right">
                                                 <div className="text-[10px] font-bold text-gray-400 uppercase">CARGA</div>
-                                                <div className="font-black text-[#273C1F] text-xl">
+                                                <div className="font-black text-heading text-xl">
                                                     {t.items.length} <span className="text-sm text-gray-400 font-bold">ítems</span>
                                                 </div>
                                             </div>
 
                                             <button
                                                 onClick={() => generateRemitoPDF(t)}
-                                                className="p-2 hover:bg-[#C1E3A4]/50 rounded-lg text-[#598C30] transition-colors shadow-sm active:scale-95"
+                                                className="p-2 hover:bg-surface-accent/50 rounded-lg text-accent-strong transition-colors shadow-sm active:scale-95"
                                                 title="Descargar Remito PDF"
                                             >
                                                 <Download className="w-5 h-5" />
@@ -158,7 +158,7 @@ export default function LogisticsTab() {
                                         {t.status === StockTransferStatus.PENDING && (
                                             <button
                                                 onClick={() => handleConfirm(t.id)}
-                                                className="bg-white border-2 border-[#598C30] text-[#598C30] hover:bg-[#598C30] hover:text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all shadow-md active:scale-95"
+                                                className="bg-white border-2 border-accent-strong text-accent-strong hover:bg-accent-strong hover:text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all shadow-md active:scale-95"
                                             >
                                                 Confirmar
                                             </button>
@@ -169,12 +169,12 @@ export default function LogisticsTab() {
                         ))}
                     </div>
                 ) : (
-                    <div className="text-center py-20 bg-[#C1E3A480] rounded-lg">
-                        <svg width={80} height={80} viewBox="0 0 41 30" fill="none" className="mx-auto mb-6" aria-hidden>
-                            <path d="M29.8182 5.6228H35.4091L41 13.2248V24.3655H37.2075C36.9831 25.9269 36.2068 27.3548 35.0209 28.3875C33.8349 29.4203 32.3187 29.9887 30.75 29.9887C29.1813 29.9887 27.665 29.4203 26.4791 28.3875C25.2932 27.3548 24.5169 25.9269 24.2925 24.3655H14.8439C14.6223 25.9291 13.8472 27.3599 12.6609 28.395C11.4747 29.4301 9.95688 30 8.38636 30C6.81584 30 5.29805 29.4301 4.11178 28.395C2.92551 27.3599 2.15041 25.9291 1.92886 24.3655H0V1.87427C0 1.37718 0.196347 0.900453 0.545846 0.54896C0.895346 0.197467 1.36937 0 1.86364 0H27.9545C28.4488 0 28.9228 0.197467 29.2723 0.54896C29.6218 0.900453 29.8182 1.37718 29.8182 1.87427V5.6228ZM29.8182 9.37133V14.9941H37.2727V14.46L33.5305 9.37133H29.8182Z" fill="#598C30" />
+                    <div className="text-center py-20 bg-surface-accent/50 rounded-lg text-accent-strong">
+                        <svg width={80} height={80} viewBox="0 0 41 30" fill="none" className="mx-auto mb-6 text-accent-strong" aria-hidden>
+                            <path d="M29.8182 5.6228H35.4091L41 13.2248V24.3655H37.2075C36.9831 25.9269 36.2068 27.3548 35.0209 28.3875C33.8349 29.4203 32.3187 29.9887 30.75 29.9887C29.1813 29.9887 27.665 29.4203 26.4791 28.3875C25.2932 27.3548 24.5169 25.9269 24.2925 24.3655H14.8439C14.6223 25.9291 13.8472 27.3599 12.6609 28.395C11.4747 29.4301 9.95688 30 8.38636 30C6.81584 30 5.29805 29.4301 4.11178 28.395C2.92551 27.3599 2.15041 25.9291 1.92886 24.3655H0V1.87427C0 1.37718 0.196347 0.900453 0.545846 0.54896C0.895346 0.197467 1.36937 0 1.86364 0H27.9545C28.4488 0 28.9228 0.197467 29.2723 0.54896C29.6218 0.900453 29.8182 1.37718 29.8182 1.87427V5.6228ZM29.8182 9.37133V14.9941H37.2727V14.46L33.5305 9.37133H29.8182Z" fill="currentColor" />
                         </svg>
-                        <h5 className="text-2xl font-black text-[#598C30]">Sin remitos registrados</h5>
-                        <p className="text-[#598C30] font-medium max-w-xs mx-auto mt-2">
+                        <h5 className="text-2xl font-black">Sin remitos registrados</h5>
+                        <p className="font-medium max-w-xs mx-auto mt-2">
                             Cuando el dueño cargue mercadería para distribuir, los remitos aparecerán aquí.
                         </p>
                     </div>
