@@ -412,9 +412,8 @@ const AdminInterface: React.FC<AdminInterfaceProps> = () => {
             })}
           </div>
         ) : (
-          <div className="text-center py-12 bg-ui-empty-bg-subtle rounded-xl border-2 border-ui-card-border text-ui-empty-text">
-            <div className="text-5xl mb-3">💰</div>
-            <p className="font-semibold text-ui-empty-text">
+          <div className="text-center py-12 bg-ui-empty-bg-subtle rounded-lg text-ui-empty-text">
+            <p className="font-semibold text-ui-empty-text text-3xl">
               No hay dinero en caja disponible
             </p>
             <p className="text-sm mt-2 text-ui-empty-text-muted">

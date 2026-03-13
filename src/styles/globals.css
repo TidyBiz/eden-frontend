@@ -159,10 +159,10 @@
   --ui-panel-text: #FFFFFF;
   --ui-panel-text-muted: #D1D5DB;
   --ui-tab-bar-bg: #273C1F;
-  --ui-tab-active-bg: #2F5025;
-  --ui-tab-active-text: #FFFFFF;
+  --ui-tab-active-bg: #F4F1EA;
+  --ui-tab-active-text: #273C1F;
   --ui-tab-inactive-bg: transparent;
-  --ui-tab-inactive-text: #FFFFFF;
+  --ui-tab-inactive-text: #A2D45E;
   --ui-card-bg: #2F5025;
   --ui-card-text: #FFFFFF;
   --ui-card-text-muted: #D1D5DB;
